@@ -1,0 +1,7 @@
+### Everything the app needs on launch for the signed-in user.
+class: Me
+fields:
+  profile: Reader?
+  suggestedHandle: String
+  activeBreak: StudyBreak?
+  dueWords: int, default=0

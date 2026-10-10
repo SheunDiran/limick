@@ -1,0 +1,14 @@
+### A chapter of an ingested book. [text] is reflowed: paragraphs are
+### separated by a blank line, so character offsets are stable.
+class: Chapter
+table: chapter
+fields:
+  bookId: int, relation(parent=book, onDelete=Cascade)
+  position: int
+  title: String
+  wordCount: int
+  text: String
+indexes:
+  chapter_book_position_idx:
+    fields: bookId, position
+    unique: true

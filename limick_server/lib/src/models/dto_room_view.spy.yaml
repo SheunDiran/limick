@@ -1,0 +1,7 @@
+class: RoomView
+fields:
+  room: Room
+  joined: bool
+  unread: int, default=0
+  onlineCount: int, default=0
+  lastMessage: String?

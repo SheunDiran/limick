@@ -1,0 +1,11 @@
+class: PostLike
+table: post_like
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  postId: int, relation(parent=post, onDelete=Cascade)
+
+  createdAt: DateTime, default=now
+indexes:
+  post_like_unique_idx:
+    fields: profileId, postId
+    unique: true

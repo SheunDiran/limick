@@ -1,0 +1,7 @@
+### The public face of a user, attached to comments and messages.
+class: Author
+fields:
+  id: int
+  handle: String
+  displayName: String
+  avatarHue: int

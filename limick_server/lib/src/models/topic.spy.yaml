@@ -1,0 +1,21 @@
+### Broad subject area used for onboarding, ranking and rooms.
+enum: Topic
+values:
+  - medicine
+  - law
+  - science
+  - philosophy
+  - psychology
+  - economics
+  - history
+  - literature
+  - poetry
+  - mathematics
+  - technology
+  - religion
+  - politics
+  - biography
+  - selfImprovement
+  - arts
+  - education
+  - nature

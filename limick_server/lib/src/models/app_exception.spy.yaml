@@ -1,0 +1,5 @@
+### A user-facing error. [message] is safe to show in the UI.
+exception: AppException
+fields:
+  message: String
+  code: String, default='error'

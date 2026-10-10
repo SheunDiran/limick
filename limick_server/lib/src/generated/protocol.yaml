@@ -9,5 +9,65 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
-greeting:
-  - hello:
+book:
+  - search:
+  - continueReading:
+  - detail:
+  - byHandle:
+  - setFollowing:
+  - prepare:
+  - chapter:
+  - saveProgress:
+comment:
+  - list:
+  - add:
+  - delete:
+  - setLiked:
+  - watch:
+feed:
+  - forYou:
+  - following:
+  - post:
+  - bookPosts:
+  - saved:
+  - recordViews:
+  - setLiked:
+  - setSaved:
+  - answerQuiz:
+  - vote:
+  - openedBook:
+library:
+  - status:
+moderation:
+  - report:
+  - setBlocked:
+  - blocked:
+profile:
+  - me:
+  - isHandleAvailable:
+  - completeOnboarding:
+  - updateProfile:
+  - getProfile:
+  - stats:
+  - exportData:
+  - deleteAccount:
+room:
+  - list:
+  - get:
+  - forBook:
+  - setJoined:
+  - messages:
+  - send:
+  - delete:
+  - markRead:
+  - live:
+studyBreak:
+  - start:
+  - active:
+  - end:
+word:
+  - saveFromPost:
+  - list:
+  - due:
+  - review:
+  - remove:

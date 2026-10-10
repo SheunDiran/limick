@@ -1,0 +1,11 @@
+class: PostView
+table: post_view
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  postId: int, relation(parent=post, onDelete=Cascade)
+  dwellMs: int, default=0
+  createdAt: DateTime, default=now
+indexes:
+  post_view_unique_idx:
+    fields: profileId, postId
+    unique: true

@@ -1,0 +1,11 @@
+class: DebateVote
+table: debate_vote
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  postId: int, relation(parent=post, onDelete=Cascade)
+  agree: bool
+  createdAt: DateTime, default=now
+indexes:
+  debate_vote_unique_idx:
+    fields: profileId, postId
+    unique: true

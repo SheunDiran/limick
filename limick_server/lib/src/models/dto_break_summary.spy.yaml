@@ -1,0 +1,11 @@
+### What the user learned during a study break.
+class: BreakSummary
+fields:
+  studyBreak: StudyBreak
+  postsRead: int
+  wordsSaved: int
+  quizzesAnswered: int
+  quizzesCorrect: int
+  books: List<String>
+  continueBook: Book?
+  continueChapter: int?

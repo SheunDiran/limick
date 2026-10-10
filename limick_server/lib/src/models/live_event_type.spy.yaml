@@ -1,0 +1,6 @@
+enum: LiveEventType
+values:
+  - added
+  - deleted
+  - liked
+  - presence

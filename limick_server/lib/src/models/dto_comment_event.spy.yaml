@@ -1,0 +1,8 @@
+### Live update for an open comment thread.
+class: CommentEvent
+fields:
+  type: LiveEventType
+  postId: int
+  comment: CommentView?
+  commentId: int?
+  likeCount: int?

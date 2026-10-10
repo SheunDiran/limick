@@ -1,0 +1,8 @@
+class: Report
+table: report
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  targetType: String
+  targetId: int
+  reason: String
+  createdAt: DateTime, default=now

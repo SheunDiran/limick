@@ -1,0 +1,12 @@
+class: QuizAnswer
+table: quiz_answer
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  postId: int, relation(parent=post, onDelete=Cascade)
+  choiceIndex: int
+  correct: bool
+  createdAt: DateTime, default=now
+indexes:
+  quiz_answer_unique_idx:
+    fields: profileId, postId
+    unique: true

@@ -1,0 +1,6 @@
+class: FeedPage
+fields:
+  items: List<FeedItem>
+  hasMore: bool
+  ### True when more posts are being generated for this user right now.
+  generating: bool, default=false

@@ -1,0 +1,8 @@
+### Where a book is in the ingestion pipeline.
+enum: BookStatus
+values:
+  - catalogued
+  - queued
+  - ingesting
+  - ready
+  - failed

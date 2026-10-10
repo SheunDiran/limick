@@ -1,4 +1,44 @@
-# Flutter & Serverpod project
+# Limick: Flutter & Serverpod project
+
+Limick is a social feed for students and readers where every post is generated from a real public-domain book
+(Project Gutenberg). It looks and scrolls like a social app, but each post links to the exact chapter it came
+from. Built for the Serverpod hackathon (deadline 14 Oct 2026); planning notes live in `.private/` (gitignored).
+
+## How the app works
+
+- **Library pipeline** (`limick_server/lib/src/books/`, `future_calls/library_future_call.dart`): on boot,
+  `LibraryService.seed` inserts ~78 curated books (`seed_books.dart`) and the topic rooms. A recurring FutureCall
+  (`library-tick`, every 20 s, registered in `lib/server.dart`) ingests queued books (download with HTTP range
+  resume → strip the Gutenberg licence → split into chapters in `gutenberg.dart`), imports the full Gutenberg
+  catalogue once (~60k English titles), and generates posts.
+- **Post generation** (`lib/src/ai/`): `PostGenerator` reads the next ~750-word passage of a book, asks Claude
+  Haiku 4.5 (`claude_client.dart`, raw HTTP, JSON-schema structured output) for three posts of rotating kinds
+  (insight, quote, word, thread, quiz, debate), and validates them: quotes and vocabulary must appear verbatim in
+  the passage (`util/text.dart` `findQuote`). The API key is `anthropicApiKey` in `config/passwords.yaml`
+  (`shared:`) or env `SERVERPOD_PASSWORD_anthropicApiKey`; without it generation pauses with a warning.
+- **Feed** (`lib/src/feed/`): per-reader topic and book affinity (`topic_affinity`, `book_affinity`), updated by
+  signals in `affinity.dart` (dwell time, likes, saves, comments, quiz, open-book, follows, onboarding).
+  `FeedService.forYou` picks unseen candidates, scores them, then applies diversity and exploration rules.
+  Low supply raises `book.popularity`, which raises that book's generation target.
+- **Endpoints** (`lib/src/endpoints/`): profile (onboarding, streaks, stats, export, delete), feed, book
+  (catalogue, reader, progress), comment (+ `watch` stream), room (+ `live` stream with presence), word (Leitner
+  review), studyBreak, moderation, library (public status). Errors for users are `AppException`.
+- **Models**: `.spy.yaml` files in `lib/src/models/`. The app's user model is `Reader` (not `UserProfile`, which
+  clashes with the auth module). Server-only fields must be nullable.
+- **Flutter app** (`limick_flutter/lib/`): `main.dart` (AppGate: sign-in → onboarding → HomeShell),
+  `state/app_state.dart` (current reader, study break timer, theme), `state/view_tracker.dart` (dwell signals),
+  `widgets/post_card.dart` (all post kinds), screens for feed, post + live comments, book profile, reader,
+  discover, rooms, words, profile. Theme in `theme.dart` (ink and paper with an ember accent, Newsreader +
+  Instrument Sans). Book covers are generated (`widgets/covers.dart`); no image assets.
+
+## Serverpod notes for this codebase
+
+- Ordering is `orderBy: (t) => t.col.desc()` (no `orderDescending` in v4).
+- Raw SQL in tests runs inside a transaction, so `NOW()` is the transaction start: pass Dart timestamps instead.
+- Double columns compare against doubles (`t.score > 0.0`).
+- Use `flutter pub get` / `flutter analyze` for the Flutter package; `dart fix` there rewrites `pubspec.yaml`.
+
+## Working with this project
 
 This project is a Flutter app (frontend) backed by a Serverpod server (backend). Always build the app's backend with Serverpod.
 Build for multiple users, use Serverpod's built-in authentication, which is already set up in `lib/server.dart`.
@@ -46,5 +86,3 @@ If the user asks you to test the app:
 3. Use `flutter_driver` (`dart` MCP) to navigate through the app
 
 The app is launched from `limick_flutter/lib/driver.dart`, which starts the Flutter driver extension with text entry emulation turned off so the app stays usable by hand. To let the driver type, set `enableTextEntryEmulation: true` there and `hot_restart` the app.
-
-IMPORTANT: After building the first version of the app, update this AGENTS.md file with information about the app we're building. KEEP the info about the MCP server and the checklist. Remove this paragraph.

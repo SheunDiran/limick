@@ -1,0 +1,11 @@
+class: BookFollow
+table: book_follow
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  bookId: int, relation(parent=book, onDelete=Cascade)
+
+  createdAt: DateTime, default=now
+indexes:
+  book_follow_unique_idx:
+    fields: profileId, bookId
+    unique: true

@@ -1,0 +1,8 @@
+class: PublicProfile
+fields:
+  author: Author
+  bio: String
+  field: String?
+  stats: ProfileStats
+  isMe: bool
+  blocked: bool, default=false

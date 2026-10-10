@@ -1,0 +1,35 @@
+### A post generated from a passage of a book.
+class: Post
+table: post
+fields:
+  bookId: int, relation(parent=book, onDelete=Cascade)
+  chapterId: int, relation(parent=chapter, onDelete=Cascade)
+  chapterPosition: int
+  kind: PostKind
+  body: String
+  quote: String?
+  parts: List<String>?
+  word: String?
+  wordDefinition: String?
+  wordPartOfSpeech: String?
+  quizOptions: List<String>?
+  quizAnswerIndex: int?, scope=serverOnly
+  quizExplanation: String?, scope=serverOnly
+  primaryTopic: Topic
+  historical: bool, default=false
+  passageStart: int
+  passageEnd: int
+  likeCount: int, default=0
+  commentCount: int, default=0
+  saveCount: int, default=0
+  agreeCount: int, default=0
+  disagreeCount: int, default=0
+  quizAnswerCount: int, default=0
+  createdAt: DateTime, default=now
+indexes:
+  post_book_idx:
+    fields: bookId
+  post_topic_idx:
+    fields: primaryTopic
+  post_created_idx:
+    fields: createdAt

@@ -1,0 +1,7 @@
+class: ChapterContent
+fields:
+  bookId: int
+  position: int
+  title: String
+  text: String
+  chapterCount: int

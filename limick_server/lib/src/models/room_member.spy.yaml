@@ -1,0 +1,11 @@
+class: RoomMember
+table: room_member
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  roomId: int, relation(parent=room, onDelete=Cascade)
+  lastReadAt: DateTime, default=now
+  createdAt: DateTime, default=now
+indexes:
+  room_member_unique_idx:
+    fields: profileId, roomId
+    unique: true

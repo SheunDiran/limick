@@ -1,0 +1,13 @@
+class: ReadingProgress
+table: reading_progress
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  bookId: int, relation(parent=book, onDelete=Cascade)
+  chapterPosition: int
+  scrollFraction: double, default=0
+  updatedAt: DateTime, default=now
+  createdAt: DateTime, default=now
+indexes:
+  reading_progress_unique_idx:
+    fields: profileId, bookId
+    unique: true

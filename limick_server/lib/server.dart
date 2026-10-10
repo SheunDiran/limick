@@ -4,6 +4,7 @@ import 'package:serverpod_auth_idp_server/core.dart';
 import 'package:serverpod_auth_idp_server/providers/email.dart';
 import 'package:serverpod_cloud_storage/serverpod_cloud_storage.dart';
 
+import 'src/books/library_service.dart';
 import 'src/cache_busting.dart';
 import 'src/generated/serverpod.dart';
 import 'src/web/routes/app_config_route.dart';
@@ -100,4 +101,25 @@ void run(List<String> args) async {
 
   // Start the server.
   await pod.start();
+
+  await _startLibraryPipeline(pod);
+}
+
+/// Seeds the starter library and schedules the background pipeline that
+/// ingests books and generates posts. Re-registering on every boot keeps a
+/// single recurring job, even across restarts.
+Future<void> _startLibraryPipeline(Serverpod pod) async {
+  final session = await pod.createSession();
+  try {
+    await LibraryService.seed(session);
+  } finally {
+    await session.close();
+  }
+
+  await pod.futureCalls.cancel('library-tick');
+  await pod.futureCalls
+      .callRecurring(identifier: 'library-tick')
+      .every(const Duration(seconds: 20), start: DateTime.now())
+      .library
+      .tick();
 }

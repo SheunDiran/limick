@@ -1,0 +1,5 @@
+### How long a post was on screen, sent in batches by the client.
+class: ViewSignal
+fields:
+  postId: int
+  dwellMs: int

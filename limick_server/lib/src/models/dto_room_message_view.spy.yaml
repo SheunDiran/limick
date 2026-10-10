@@ -1,0 +1,4 @@
+class: RoomMessageView
+fields:
+  message: RoomMessage
+  author: Author

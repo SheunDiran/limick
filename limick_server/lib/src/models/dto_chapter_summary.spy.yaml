@@ -1,0 +1,5 @@
+class: ChapterSummary
+fields:
+  position: int
+  title: String
+  wordCount: int

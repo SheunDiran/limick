@@ -1,0 +1,9 @@
+### Public, live numbers about the library. Shown in the app and useful
+### for checking that the background pipeline is working.
+class: LibraryStatus
+fields:
+  booksCatalogued: int
+  booksReady: int
+  booksQueued: int
+  posts: int
+  generationEnabled: bool

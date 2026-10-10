@@ -1,0 +1,4 @@
+enum: FeedItemKind
+values:
+  - post
+  - review

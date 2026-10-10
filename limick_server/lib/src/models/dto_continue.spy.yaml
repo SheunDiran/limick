@@ -1,0 +1,6 @@
+### A book the user has started, for the "continue reading" shelf.
+class: ContinueReading
+fields:
+  book: Book
+  progress: ReadingProgress
+  chapterTitle: String

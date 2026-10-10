@@ -1,0 +1,7 @@
+class: BookDetail
+fields:
+  book: Book
+  following: bool
+  progress: ReadingProgress?
+  chapters: List<ChapterSummary>
+  roomId: int?

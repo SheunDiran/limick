@@ -1,0 +1,8 @@
+### Live update for an open room.
+class: RoomEvent
+fields:
+  type: LiveEventType
+  roomId: int
+  message: RoomMessageView?
+  messageId: int?
+  onlineCount: int?

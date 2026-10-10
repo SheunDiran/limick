@@ -12,8 +12,35 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _ida;
 import 'package:http/http.dart' as _i85jenna;
-import 'package:limick_client/src/protocol/greetings/greeting.dart'
-    as _in31dr35;
+import 'package:limick_client/src/protocol/book.dart' as _i5tn6nrb;
+import 'package:limick_client/src/protocol/dto_author.dart' as _igl91g7y;
+import 'package:limick_client/src/protocol/dto_book_detail.dart' as _if2meqjg;
+import 'package:limick_client/src/protocol/dto_break_summary.dart' as _ipohq6op;
+import 'package:limick_client/src/protocol/dto_chapter_content.dart'
+    as _i0wj6hma;
+import 'package:limick_client/src/protocol/dto_comment_event.dart' as _iuk66ey6;
+import 'package:limick_client/src/protocol/dto_comment_view.dart' as _ileb9px8;
+import 'package:limick_client/src/protocol/dto_continue.dart' as _i50xy7df;
+import 'package:limick_client/src/protocol/dto_feed.dart' as _i2a5226i;
+import 'package:limick_client/src/protocol/dto_feed_page.dart' as _ioxiasn3;
+import 'package:limick_client/src/protocol/dto_library_status.dart'
+    as _i2s76435;
+import 'package:limick_client/src/protocol/dto_me.dart' as _ia3wfgcv;
+import 'package:limick_client/src/protocol/dto_onboarding.dart' as _itf5sm15;
+import 'package:limick_client/src/protocol/dto_profile_stats.dart' as _ilqwmwet;
+import 'package:limick_client/src/protocol/dto_public_profile.dart'
+    as _iruz11o4;
+import 'package:limick_client/src/protocol/dto_quiz_result.dart' as _ip6mgp95;
+import 'package:limick_client/src/protocol/dto_room_event.dart' as _i6rbd8g1;
+import 'package:limick_client/src/protocol/dto_room_message_view.dart'
+    as _ijflktyh;
+import 'package:limick_client/src/protocol/dto_room_view.dart' as _i17464ln;
+import 'package:limick_client/src/protocol/dto_view_signal.dart' as _ikggovgk;
+import 'package:limick_client/src/protocol/reader.dart' as _i1rt7yr0;
+import 'package:limick_client/src/protocol/reading_progress.dart' as _i7xi8k16;
+import 'package:limick_client/src/protocol/saved_word.dart' as _imgi0cxh;
+import 'package:limick_client/src/protocol/study_break.dart' as _iu9bznc7;
+import 'package:limick_client/src/protocol/topic.dart' as _ileau18m;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
@@ -246,22 +273,593 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
-/// This is an example endpoint that returns a greeting message through
-/// its [hello] method.
+/// The catalogue, book profiles and the reader.
 /// {@category Endpoint}
-class EndpointGreeting extends _isc.EndpointRef {
-  EndpointGreeting(_isc.EndpointCaller caller) : super(caller);
+class EndpointBook extends _isc.EndpointRef {
+  EndpointBook(_isc.EndpointCaller caller) : super(caller);
 
   @override
-  String get name => 'greeting';
+  String get name => 'book';
 
-  /// Returns a personalized greeting message: "Hello {name}".
-  _ida.Future<_in31dr35.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_in31dr35.Greeting>(
-        'greeting',
-        'hello',
-        {'name': name},
+  /// Searches ~60k public-domain books by title or author. With an empty
+  /// query, returns the featured and most active books (optionally by topic).
+  _ida.Future<List<_i5tn6nrb.Book>> search(
+    String query,
+    _ileau18m.Topic? topic,
+    int offset,
+  ) => caller.callServerEndpoint<List<_i5tn6nrb.Book>>(
+    'book',
+    'search',
+    {
+      'query': query,
+      'topic': topic,
+      'offset': offset,
+    },
+  );
+
+  _ida.Future<List<_i50xy7df.ContinueReading>> continueReading() =>
+      caller.callServerEndpoint<List<_i50xy7df.ContinueReading>>(
+        'book',
+        'continueReading',
+        {},
       );
+
+  _ida.Future<_if2meqjg.BookDetail> detail(int bookId) =>
+      caller.callServerEndpoint<_if2meqjg.BookDetail>(
+        'book',
+        'detail',
+        {'bookId': bookId},
+      );
+
+  _ida.Future<_if2meqjg.BookDetail> byHandle(String handle) =>
+      caller.callServerEndpoint<_if2meqjg.BookDetail>(
+        'book',
+        'byHandle',
+        {'handle': handle},
+      );
+
+  /// Follows a book. Following also queues the book for ingestion and raises
+  /// its generation target, so its posts start arriving in the feed.
+  _ida.Future<_i5tn6nrb.Book> setFollowing(
+    int bookId,
+    bool following,
+  ) => caller.callServerEndpoint<_i5tn6nrb.Book>(
+    'book',
+    'setFollowing',
+    {
+      'bookId': bookId,
+      'following': following,
+    },
+  );
+
+  /// Asks for a book to be downloaded and prepared for reading.
+  _ida.Future<_i5tn6nrb.Book> prepare(int bookId) =>
+      caller.callServerEndpoint<_i5tn6nrb.Book>(
+        'book',
+        'prepare',
+        {'bookId': bookId},
+      );
+
+  /// One chapter of a book. Chapters are cached in memory because readers
+  /// page back and forth.
+  _ida.Future<_i0wj6hma.ChapterContent> chapter(
+    int bookId,
+    int position,
+  ) => caller.callServerEndpoint<_i0wj6hma.ChapterContent>(
+    'book',
+    'chapter',
+    {
+      'bookId': bookId,
+      'position': position,
+    },
+  );
+
+  _ida.Future<_i7xi8k16.ReadingProgress> saveProgress(
+    int bookId,
+    int chapterPosition,
+    double scrollFraction,
+  ) => caller.callServerEndpoint<_i7xi8k16.ReadingProgress>(
+    'book',
+    'saveProgress',
+    {
+      'bookId': bookId,
+      'chapterPosition': chapterPosition,
+      'scrollFraction': scrollFraction,
+    },
+  );
+}
+
+/// Comment threads under posts, with live updates.
+/// {@category Endpoint}
+class EndpointComment extends _isc.EndpointRef {
+  EndpointComment(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'comment';
+
+  /// All comments for a post: top level by popularity, replies in order.
+  _ida.Future<List<_ileb9px8.CommentView>> list(int postId) =>
+      caller.callServerEndpoint<List<_ileb9px8.CommentView>>(
+        'comment',
+        'list',
+        {'postId': postId},
+      );
+
+  _ida.Future<_ileb9px8.CommentView> add(
+    int postId,
+    String body,
+    int? parentId,
+  ) => caller.callServerEndpoint<_ileb9px8.CommentView>(
+    'comment',
+    'add',
+    {
+      'postId': postId,
+      'body': body,
+      'parentId': parentId,
+    },
+  );
+
+  _ida.Future<void> delete(int commentId) => caller.callServerEndpoint<void>(
+    'comment',
+    'delete',
+    {'commentId': commentId},
+  );
+
+  _ida.Future<int> setLiked(
+    int commentId,
+    bool liked,
+  ) => caller.callServerEndpoint<int>(
+    'comment',
+    'setLiked',
+    {
+      'commentId': commentId,
+      'liked': liked,
+    },
+  );
+
+  /// Live updates for an open thread. Comments from blocked users are
+  /// filtered per viewer.
+  _ida.Stream<_iuk66ey6.CommentEvent> watch(int postId) =>
+      caller.callStreamingServerEndpoint<
+        _ida.Stream<_iuk66ey6.CommentEvent>,
+        _iuk66ey6.CommentEvent
+      >(
+        'comment',
+        'watch',
+        {'postId': postId},
+        {},
+      );
+}
+
+/// Feeds and every interaction with a post.
+/// {@category Endpoint}
+class EndpointFeed extends _isc.EndpointRef {
+  EndpointFeed(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'feed';
+
+  /// The personalised feed. [excludeIds] are posts already shown in this
+  /// session, so paging never repeats a card.
+  _ida.Future<_ioxiasn3.FeedPage> forYou(List<int> excludeIds) =>
+      caller.callServerEndpoint<_ioxiasn3.FeedPage>(
+        'feed',
+        'forYou',
+        {'excludeIds': excludeIds},
+      );
+
+  _ida.Future<_ioxiasn3.FeedPage> following(int? beforeId) =>
+      caller.callServerEndpoint<_ioxiasn3.FeedPage>(
+        'feed',
+        'following',
+        {'beforeId': beforeId},
+      );
+
+  _ida.Future<_i2a5226i.FeedItem> post(int postId) =>
+      caller.callServerEndpoint<_i2a5226i.FeedItem>(
+        'feed',
+        'post',
+        {'postId': postId},
+      );
+
+  /// A book's own timeline, in reading order.
+  _ida.Future<_ioxiasn3.FeedPage> bookPosts(
+    int bookId,
+    int? afterId,
+  ) => caller.callServerEndpoint<_ioxiasn3.FeedPage>(
+    'feed',
+    'bookPosts',
+    {
+      'bookId': bookId,
+      'afterId': afterId,
+    },
+  );
+
+  _ida.Future<_ioxiasn3.FeedPage> saved(int? beforeSaveId) =>
+      caller.callServerEndpoint<_ioxiasn3.FeedPage>(
+        'feed',
+        'saved',
+        {'beforeSaveId': beforeSaveId},
+      );
+
+  /// Dwell times from the client. These teach the ranking what the user
+  /// actually reads, and mark posts as seen.
+  _ida.Future<void> recordViews(List<_ikggovgk.ViewSignal> views) =>
+      caller.callServerEndpoint<void>(
+        'feed',
+        'recordViews',
+        {'views': views},
+      );
+
+  _ida.Future<int> setLiked(
+    int postId,
+    bool liked,
+  ) => caller.callServerEndpoint<int>(
+    'feed',
+    'setLiked',
+    {
+      'postId': postId,
+      'liked': liked,
+    },
+  );
+
+  _ida.Future<bool> setSaved(
+    int postId,
+    bool saved,
+  ) => caller.callServerEndpoint<bool>(
+    'feed',
+    'setSaved',
+    {
+      'postId': postId,
+      'saved': saved,
+    },
+  );
+
+  _ida.Future<_ip6mgp95.QuizResult> answerQuiz(
+    int postId,
+    int choiceIndex,
+  ) => caller.callServerEndpoint<_ip6mgp95.QuizResult>(
+    'feed',
+    'answerQuiz',
+    {
+      'postId': postId,
+      'choiceIndex': choiceIndex,
+    },
+  );
+
+  /// Records an agree/disagree vote and returns the post with fresh counts
+  /// and both sides of the argument.
+  _ida.Future<_i2a5226i.FeedItem> vote(
+    int postId,
+    bool agree,
+  ) => caller.callServerEndpoint<_i2a5226i.FeedItem>(
+    'feed',
+    'vote',
+    {
+      'postId': postId,
+      'agree': agree,
+    },
+  );
+
+  /// The strongest interest signal: the user went from a post to the book.
+  _ida.Future<void> openedBook(int postId) => caller.callServerEndpoint<void>(
+    'feed',
+    'openedBook',
+    {'postId': postId},
+  );
+}
+
+/// Public, live numbers about the library pipeline.
+/// {@category Endpoint}
+class EndpointLibrary extends _isc.EndpointRef {
+  EndpointLibrary(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'library';
+
+  _ida.Future<_i2s76435.LibraryStatus> status() =>
+      caller.callServerEndpoint<_i2s76435.LibraryStatus>(
+        'library',
+        'status',
+        {},
+      );
+}
+
+/// Reporting content and blocking people.
+/// {@category Endpoint}
+class EndpointModeration extends _isc.EndpointRef {
+  EndpointModeration(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'moderation';
+
+  _ida.Future<void> report(
+    String targetType,
+    int targetId,
+    String reason,
+  ) => caller.callServerEndpoint<void>(
+    'moderation',
+    'report',
+    {
+      'targetType': targetType,
+      'targetId': targetId,
+      'reason': reason,
+    },
+  );
+
+  _ida.Future<void> setBlocked(
+    int profileId,
+    bool blocked,
+  ) => caller.callServerEndpoint<void>(
+    'moderation',
+    'setBlocked',
+    {
+      'profileId': profileId,
+      'blocked': blocked,
+    },
+  );
+
+  _ida.Future<List<_igl91g7y.Author>> blocked() =>
+      caller.callServerEndpoint<List<_igl91g7y.Author>>(
+        'moderation',
+        'blocked',
+        {},
+      );
+}
+
+/// Onboarding, profiles, streaks, stats, data export and account deletion.
+/// {@category Endpoint}
+class EndpointProfile extends _isc.EndpointRef {
+  EndpointProfile(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'profile';
+
+  /// Called on every launch. Also keeps the daily streak up to date.
+  _ida.Future<_ia3wfgcv.Me> me(int tzOffsetMinutes) =>
+      caller.callServerEndpoint<_ia3wfgcv.Me>(
+        'profile',
+        'me',
+        {'tzOffsetMinutes': tzOffsetMinutes},
+      );
+
+  _ida.Future<bool> isHandleAvailable(String handle) =>
+      caller.callServerEndpoint<bool>(
+        'profile',
+        'isHandleAvailable',
+        {'handle': handle},
+      );
+
+  /// Creates the profile and seeds the recommendation engine from the user's
+  /// field, interests and favourite books.
+  _ida.Future<_ia3wfgcv.Me> completeOnboarding(
+    _itf5sm15.OnboardingInput input,
+  ) => caller.callServerEndpoint<_ia3wfgcv.Me>(
+    'profile',
+    'completeOnboarding',
+    {'input': input},
+  );
+
+  _ida.Future<_i1rt7yr0.Reader> updateProfile({
+    required String displayName,
+    required String bio,
+    String? field,
+    int? avatarHue,
+    int? dailyGoalMinutes,
+  }) => caller.callServerEndpoint<_i1rt7yr0.Reader>(
+    'profile',
+    'updateProfile',
+    {
+      'displayName': displayName,
+      'bio': bio,
+      'field': field,
+      'avatarHue': avatarHue,
+      'dailyGoalMinutes': dailyGoalMinutes,
+    },
+  );
+
+  _ida.Future<_iruz11o4.PublicProfile> getProfile(String handle) =>
+      caller.callServerEndpoint<_iruz11o4.PublicProfile>(
+        'profile',
+        'getProfile',
+        {'handle': handle},
+      );
+
+  _ida.Future<_ilqwmwet.ProfileStats> stats() =>
+      caller.callServerEndpoint<_ilqwmwet.ProfileStats>(
+        'profile',
+        'stats',
+        {},
+      );
+
+  /// Everything Limick stores about the user, as JSON (GDPR data portability).
+  _ida.Future<String> exportData() => caller.callServerEndpoint<String>(
+    'profile',
+    'exportData',
+    {},
+  );
+
+  /// Permanently deletes the user's Limick data and their sign-in account.
+  _ida.Future<void> deleteAccount() => caller.callServerEndpoint<void>(
+    'profile',
+    'deleteAccount',
+    {},
+  );
+}
+
+/// Public rooms: one per topic, plus a book club per book. Real time via
+/// Serverpod streams.
+/// {@category Endpoint}
+class EndpointRoom extends _isc.EndpointRef {
+  EndpointRoom(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'room';
+
+  _ida.Future<List<_i17464ln.RoomView>> list() =>
+      caller.callServerEndpoint<List<_i17464ln.RoomView>>(
+        'room',
+        'list',
+        {},
+      );
+
+  _ida.Future<_i17464ln.RoomView> get(int roomId) =>
+      caller.callServerEndpoint<_i17464ln.RoomView>(
+        'room',
+        'get',
+        {'roomId': roomId},
+      );
+
+  /// The book club for a book, created the first time someone opens it.
+  _ida.Future<_i17464ln.RoomView> forBook(int bookId) =>
+      caller.callServerEndpoint<_i17464ln.RoomView>(
+        'room',
+        'forBook',
+        {'bookId': bookId},
+      );
+
+  _ida.Future<_i17464ln.RoomView> setJoined(
+    int roomId,
+    bool joined,
+  ) => caller.callServerEndpoint<_i17464ln.RoomView>(
+    'room',
+    'setJoined',
+    {
+      'roomId': roomId,
+      'joined': joined,
+    },
+  );
+
+  /// Messages, newest first. Opening the latest page marks the room read.
+  _ida.Future<List<_ijflktyh.RoomMessageView>> messages(
+    int roomId,
+    int? beforeId,
+  ) => caller.callServerEndpoint<List<_ijflktyh.RoomMessageView>>(
+    'room',
+    'messages',
+    {
+      'roomId': roomId,
+      'beforeId': beforeId,
+    },
+  );
+
+  _ida.Future<_ijflktyh.RoomMessageView> send(
+    int roomId,
+    String body,
+  ) => caller.callServerEndpoint<_ijflktyh.RoomMessageView>(
+    'room',
+    'send',
+    {
+      'roomId': roomId,
+      'body': body,
+    },
+  );
+
+  _ida.Future<void> delete(int messageId) => caller.callServerEndpoint<void>(
+    'room',
+    'delete',
+    {'messageId': messageId},
+  );
+
+  _ida.Future<void> markRead(int roomId) => caller.callServerEndpoint<void>(
+    'room',
+    'markRead',
+    {'roomId': roomId},
+  );
+
+  /// Live room events. Counts this connection as "online" while it is open.
+  _ida.Stream<_i6rbd8g1.RoomEvent> live(int roomId) =>
+      caller.callStreamingServerEndpoint<
+        _ida.Stream<_i6rbd8g1.RoomEvent>,
+        _i6rbd8g1.RoomEvent
+      >(
+        'room',
+        'live',
+        {'roomId': roomId},
+        {},
+      );
+}
+
+/// Timed study breaks. The break lives on the server so it survives app
+/// restarts and works across devices; the summary shows what was learned.
+/// {@category Endpoint}
+class EndpointStudyBreak extends _isc.EndpointRef {
+  EndpointStudyBreak(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'studyBreak';
+
+  _ida.Future<_iu9bznc7.StudyBreak> start(int minutes) =>
+      caller.callServerEndpoint<_iu9bznc7.StudyBreak>(
+        'studyBreak',
+        'start',
+        {'minutes': minutes},
+      );
+
+  _ida.Future<_iu9bznc7.StudyBreak?> active() =>
+      caller.callServerEndpoint<_iu9bznc7.StudyBreak?>(
+        'studyBreak',
+        'active',
+        {},
+      );
+
+  /// Ends the break (if it is still running) and summarises it.
+  _ida.Future<_ipohq6op.BreakSummary> end(int breakId) =>
+      caller.callServerEndpoint<_ipohq6op.BreakSummary>(
+        'studyBreak',
+        'end',
+        {'breakId': breakId},
+      );
+}
+
+/// The word bank: words saved from posts, reviewed with a Leitner schedule.
+/// {@category Endpoint}
+class EndpointWord extends _isc.EndpointRef {
+  EndpointWord(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'word';
+
+  _ida.Future<_imgi0cxh.SavedWord> saveFromPost(int postId) =>
+      caller.callServerEndpoint<_imgi0cxh.SavedWord>(
+        'word',
+        'saveFromPost',
+        {'postId': postId},
+      );
+
+  _ida.Future<List<_imgi0cxh.SavedWord>> list() =>
+      caller.callServerEndpoint<List<_imgi0cxh.SavedWord>>(
+        'word',
+        'list',
+        {},
+      );
+
+  _ida.Future<List<_imgi0cxh.SavedWord>> due() =>
+      caller.callServerEndpoint<List<_imgi0cxh.SavedWord>>(
+        'word',
+        'due',
+        {},
+      );
+
+  /// Remembered words move up a box and come back later; forgotten words go
+  /// back to box 0 and return in a few hours.
+  _ida.Future<_imgi0cxh.SavedWord> review(
+    int wordId,
+    bool remembered,
+  ) => caller.callServerEndpoint<_imgi0cxh.SavedWord>(
+    'word',
+    'review',
+    {
+      'wordId': wordId,
+      'remembered': remembered,
+    },
+  );
+
+  _ida.Future<void> remove(int wordId) => caller.callServerEndpoint<void>(
+    'word',
+    'remove',
+    {'wordId': wordId},
+  );
 }
 
 class Modules {
@@ -304,7 +902,15 @@ class Client extends _isc.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
-    greeting = EndpointGreeting(this);
+    book = EndpointBook(this);
+    comment = EndpointComment(this);
+    feed = EndpointFeed(this);
+    library = EndpointLibrary(this);
+    moderation = EndpointModeration(this);
+    profile = EndpointProfile(this);
+    room = EndpointRoom(this);
+    studyBreak = EndpointStudyBreak(this);
+    word = EndpointWord(this);
     modules = Modules(this);
   }
 
@@ -312,7 +918,23 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointJwtRefresh jwtRefresh;
 
-  late final EndpointGreeting greeting;
+  late final EndpointBook book;
+
+  late final EndpointComment comment;
+
+  late final EndpointFeed feed;
+
+  late final EndpointLibrary library;
+
+  late final EndpointModeration moderation;
+
+  late final EndpointProfile profile;
+
+  late final EndpointRoom room;
+
+  late final EndpointStudyBreak studyBreak;
+
+  late final EndpointWord word;
 
   late final Modules modules;
 
@@ -320,7 +942,15 @@ class Client extends _isc.ServerpodClientShared {
   Map<String, _isc.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
-    'greeting': greeting,
+    'book': book,
+    'comment': comment,
+    'feed': feed,
+    'library': library,
+    'moderation': moderation,
+    'profile': profile,
+    'room': room,
+    'studyBreak': studyBreak,
+    'word': word,
   };
 
   @override

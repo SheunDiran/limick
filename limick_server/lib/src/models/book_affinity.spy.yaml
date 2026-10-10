@@ -1,0 +1,11 @@
+class: BookAffinity
+table: book_affinity
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  bookId: int, relation(parent=book, onDelete=Cascade)
+  score: double, default=0
+  createdAt: DateTime, default=now
+indexes:
+  book_affinity_unique_idx:
+    fields: profileId, bookId
+    unique: true

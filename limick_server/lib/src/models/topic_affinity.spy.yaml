@@ -1,0 +1,10 @@
+class: TopicAffinity
+table: topic_affinity
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  topic: Topic
+  score: double, default=0
+indexes:
+  topic_affinity_unique_idx:
+    fields: profileId, topic
+    unique: true

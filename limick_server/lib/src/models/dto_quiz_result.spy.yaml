@@ -1,0 +1,6 @@
+class: QuizResult
+fields:
+  correct: bool
+  correctIndex: int
+  explanation: String
+  answerCount: int

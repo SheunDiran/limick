@@ -1,0 +1,40 @@
+### A public-domain book from Project Gutenberg. Each book is also an
+### "account" in the feed, identified by [handle].
+class: Book
+table: book
+fields:
+  gutenbergId: int
+  title: String
+  author: String
+  authorYears: String?
+  handle: String
+  topics: List<Topic>
+  primaryTopic: Topic
+  subjects: String, default=''
+  status: BookStatus, default=catalogued
+  featured: bool, default=false
+  popularity: int, default=0
+  chapterCount: int, default=0
+  wordCount: int, default=0
+  postCount: int, default=0
+  followerCount: int, default=0
+  blurb: String?
+  ingestError: String?, scope=serverOnly
+  ingestAttempts: int, default=0
+  nextChapterPosition: int, default=0
+  nextOffset: int, default=0
+  generationFailures: int, default=0
+  lastGeneratedAt: DateTime?, scope=serverOnly
+  queuedAt: DateTime?, scope=serverOnly
+  createdAt: DateTime, default=now
+indexes:
+  book_gutenberg_idx:
+    fields: gutenbergId
+    unique: true
+  book_handle_idx:
+    fields: handle
+    unique: true
+  book_status_idx:
+    fields: status
+  book_featured_idx:
+    fields: featured

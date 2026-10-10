@@ -1,0 +1,11 @@
+class: ProfileStats
+fields:
+  postsRead: int
+  wordsSaved: int
+  booksOpened: int
+  quizzesAnswered: int
+  quizzesCorrect: int
+  streakDays: int
+  booksFollowed: int
+  comments: int
+  topTopics: List<Topic>

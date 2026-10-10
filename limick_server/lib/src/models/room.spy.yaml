@@ -1,0 +1,17 @@
+### A public chat room, either for a topic or for a single book (book club).
+class: Room
+table: room
+fields:
+  slug: String
+  name: String
+  description: String
+  topic: Topic?
+  bookId: int?, relation(parent=book, onDelete=Cascade)
+  memberCount: int, default=0
+  messageCount: int, default=0
+  lastMessageAt: DateTime?
+  createdAt: DateTime, default=now
+indexes:
+  room_slug_idx:
+    fields: slug
+    unique: true

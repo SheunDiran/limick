@@ -1,0 +1,16 @@
+### One card in a feed: a post with the viewer's state, or a word review.
+class: FeedItem
+fields:
+  kind: FeedItemKind
+  post: Post?
+  book: Book?
+  chapterTitle: String?
+  liked: bool, default=false
+  saved: bool, default=false
+  followingBook: bool, default=false
+  quizChoice: int?
+  quizCorrectIndex: int?
+  quizExplanation: String?
+  debateVote: bool?
+  reason: String?
+  review: SavedWord?

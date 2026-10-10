@@ -1,0 +1,5 @@
+class: CommentView
+fields:
+  comment: Comment
+  author: Author
+  likedByMe: bool, default=false

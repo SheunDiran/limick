@@ -1,0 +1,5 @@
+### Cache entry used for rate limiting. Server only.
+class: RateLimitMarker
+serverOnly: true
+fields:
+  createdAt: DateTime, default=now

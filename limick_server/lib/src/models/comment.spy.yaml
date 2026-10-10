@@ -1,0 +1,14 @@
+class: Comment
+table: comment
+fields:
+  postId: int, relation(parent=post, onDelete=Cascade)
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  parentId: int?
+  body: String
+  likeCount: int, default=0
+  replyCount: int, default=0
+  deleted: bool, default=false
+  createdAt: DateTime, default=now
+indexes:
+  comment_post_idx:
+    fields: postId

@@ -1,0 +1,11 @@
+class: RoomMessage
+table: room_message
+fields:
+  roomId: int, relation(parent=room, onDelete=Cascade)
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  body: String
+  deleted: bool, default=false
+  createdAt: DateTime, default=now
+indexes:
+  room_message_room_idx:
+    fields: roomId

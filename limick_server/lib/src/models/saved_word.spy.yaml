@@ -1,0 +1,19 @@
+### A word in the user's word bank, reviewed with a simple Leitner schedule.
+class: SavedWord
+table: saved_word
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  word: String
+  definition: String
+  partOfSpeech: String, default=''
+  example: String?
+  bookTitle: String?
+  postId: int?
+  box: int, default=0
+  reviewCount: int, default=0
+  dueAt: DateTime
+  createdAt: DateTime, default=now
+indexes:
+  saved_word_unique_idx:
+    fields: profileId, word
+    unique: true

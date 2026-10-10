@@ -1,0 +1,10 @@
+class: UserBlock
+table: user_block
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  blockedId: int
+  createdAt: DateTime, default=now
+indexes:
+  user_block_unique_idx:
+    fields: profileId, blockedId
+    unique: true

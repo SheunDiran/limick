@@ -1,0 +1,8 @@
+class: OnboardingInput
+fields:
+  displayName: String
+  handle: String
+  field: String?
+  interests: List<Topic>
+  favoriteBookIds: List<int>
+  dailyGoalMinutes: int

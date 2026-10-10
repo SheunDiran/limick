@@ -1,0 +1,10 @@
+class: StudyBreak
+table: study_break
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  plannedMinutes: int
+  startedAt: DateTime, default=now
+  endedAt: DateTime?
+indexes:
+  study_break_profile_idx:
+    fields: profileId

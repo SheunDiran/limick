@@ -1,0 +1,11 @@
+class: CommentLike
+table: comment_like
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  commentId: int, relation(parent=comment, onDelete=Cascade)
+
+  createdAt: DateTime, default=now
+indexes:
+  comment_like_unique_idx:
+    fields: profileId, commentId
+    unique: true

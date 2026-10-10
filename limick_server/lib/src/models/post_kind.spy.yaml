@@ -1,0 +1,9 @@
+### The shape of an AI-generated post.
+enum: PostKind
+values:
+  - insight
+  - quote
+  - word
+  - thread
+  - quiz
+  - debate
