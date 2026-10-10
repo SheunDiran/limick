@@ -1,0 +1,30 @@
+services:
+  # Development services
+  postgres:
+    image: ghcr.io/serverpod/postgres:16
+    ports:
+      - "8090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: limick
+      POSTGRES_PASSWORD: "_3SgAbqeRi40qdWewZ_kY2KQW5U3u1sC"
+    volumes:
+      - limick_data:/var/lib/postgresql/data
+
+
+  # Test services
+  postgres_test:
+    image: ghcr.io/serverpod/postgres:16
+    ports:
+      - "9090:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: limick_test
+      POSTGRES_PASSWORD: "yFxosGXmss8-cdUo159A9Og2oA6BbnqY"
+    volumes:
+      - limick_test_data:/var/lib/postgresql/data
+
+
+volumes:
+  limick_data:
+  limick_test_data:
