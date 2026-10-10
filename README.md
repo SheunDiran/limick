@@ -153,7 +153,8 @@ serverpod start
 ## Deploying
 
 - **Server:** [Serverpod Cloud](https://docs.serverpod.dev/cloud) (`serverpod cloud launch`, then `serverpod cloud deploy`). Set the same keys as `passwords.yaml` with `serverpod cloud password set <name> "<value>"`: `groqApiKey`, `geminiApiKey`, and optionally `publicAppUrl` (where shared post pages should link).
-- **Web app:** Vercel. Import the repo with **Root Directory** `limick_flutter` and set the environment variable `SERVER_URL` to the Serverpod API URL. `limick_flutter/vercel.json` and `vercel_build.sh` install Flutter, build the web app with that URL and serve it as a single-page app. The API allows cross-origin requests (token auth, WebSockets for live features), so no proxy is needed.
+- **Production domains (Serverpod Cloud project `limmick`):** API `https://limmick.api.serverpod.space/`, web server and share pages `https://limmick.serverpod.space/`, Insights `https://limmick.insights.serverpod.space/`.
+- **Web app:** Vercel. Import the repo with **Root Directory** `limick_flutter`. The build targets the production API by default; set the environment variable `SERVER_URL` only to point at a different server. `limick_flutter/vercel.json` and `vercel_build.sh` install Flutter, build the web app with that URL and serve it as a single-page app. The API allows cross-origin requests (token auth, WebSockets for live features), so no proxy is needed.
 
 ## Running Tests
 

@@ -2,21 +2,17 @@
 # Builds the Limick Flutter web app on Vercel.
 #
 # Vercel's build image has no Flutter SDK, so this script installs a pinned
-# version, then builds with the API URL baked in. Required environment
-# variable (set it in the Vercel project settings):
+# version, then builds with the API URL baked in.
 #
-#   SERVER_URL   the Serverpod API URL, e.g. https://limick.api.serverpod.space/
-#
-# Optional:
+# Optional environment variables (Vercel project settings):
+#   SERVER_URL        the Serverpod API URL. Defaults to the production API on
+#                     Serverpod Cloud, https://limmick.api.serverpod.space/
 #   FLUTTER_VERSION   Flutter tag to install (default below; matches pubspec).
 set -euo pipefail
 
 FLUTTER_VERSION="${FLUTTER_VERSION:-3.44.6}"
 
-if [ -z "${SERVER_URL:-}" ]; then
-  echo "SERVER_URL is not set. Add it in Vercel > Project > Settings > Environment Variables." >&2
-  exit 1
-fi
+SERVER_URL="${SERVER_URL:-https://limmick.api.serverpod.space/}"
 # The Serverpod client expects a trailing slash.
 case "$SERVER_URL" in
   */) ;;
