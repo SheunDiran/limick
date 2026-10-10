@@ -329,7 +329,7 @@ String _reflow(String raw) {
             ? nonEmpty.map((l) => l.trim()).join('\n')
             : nonEmpty.map((l) => l.trim()).join(' ');
         return joined
-            .replaceAll(RegExp(r'_([^_]+)_'), r'$1')
+            .replaceAllMapped(RegExp(r'_([^_]+)_'), (m) => m[1]!)
             .replaceAll(RegExp(r'[ \t]{2,}'), ' ');
       })
       .where((p) => !RegExp(r'^[\s*.\-=]+$').hasMatch(p));

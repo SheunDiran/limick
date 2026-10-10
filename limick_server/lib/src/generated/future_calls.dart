@@ -14,7 +14,10 @@
 import 'dart:async' as _ida;
 import 'package:clock/clock.dart' as _io0w16m8;
 import 'package:serverpod/serverpod.dart' as _is;
+import '../future_calls/book_reply_future_call.dart' as _ionibnyl;
 import '../future_calls/library_future_call.dart' as _i3nykog7;
+import 'future_calls_generated_models/book_reply_future_call_reply_model.dart'
+    as _is9mb6h6;
 
 /// Invokes a future call.
 typedef _InvokeFutureCall =
@@ -58,6 +61,7 @@ class FutureCalls extends _is.FutureCallDispatch<_FutureCallRef> {
     String serverId,
   ) {
     var registeredFutureCalls = <String, _is.InvokableFutureCall>{
+      'BookReplyReplyFutureCall': BookReplyReplyFutureCall(),
       'LibraryTickFutureCall': LibraryTickFutureCall(),
     };
     _futureCallManager = futureCallManager;
@@ -179,7 +183,23 @@ class _FutureCallRef {
 
   final _InvokeFutureCall _invokeFutureCall;
 
+  late final bookReply = _BookReplyFutureCallDispatcher(_invokeFutureCall);
+
   late final library = _LibraryFutureCallDispatcher(_invokeFutureCall);
+}
+
+class _BookReplyFutureCallDispatcher {
+  _BookReplyFutureCallDispatcher(this._invokeFutureCall);
+
+  final _InvokeFutureCall _invokeFutureCall;
+
+  Future<void> reply(int commentId) {
+    var object = _is9mb6h6.BookReplyFutureCallReplyModel(commentId: commentId);
+    return _invokeFutureCall(
+      'BookReplyReplyFutureCall',
+      object,
+    );
+  }
 }
 
 class _LibraryFutureCallDispatcher {
@@ -192,6 +212,24 @@ class _LibraryFutureCallDispatcher {
       'LibraryTickFutureCall',
       null,
     );
+  }
+}
+
+class BookReplyReplyFutureCall
+    extends _is.FutureCall<_is9mb6h6.BookReplyFutureCallReplyModel>
+    implements
+        _is.InvokableFutureCall<_is9mb6h6.BookReplyFutureCallReplyModel> {
+  @override
+  _ida.Future<void> invoke(
+    _is.Session session,
+    _is9mb6h6.BookReplyFutureCallReplyModel? object,
+  ) async {
+    if (object != null) {
+      await _ionibnyl.BookReplyFutureCall().reply(
+        session,
+        object.commentId,
+      );
+    }
   }
 }
 

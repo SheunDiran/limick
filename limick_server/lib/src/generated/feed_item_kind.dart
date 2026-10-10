@@ -14,7 +14,8 @@ import 'package:serverpod/serverpod.dart' as _is;
 
 enum FeedItemKind implements _is.SerializableModel {
   post,
-  review;
+  review,
+  official;
 
   static FeedItemKind fromJson(String name) {
     switch (name) {
@@ -22,6 +23,8 @@ enum FeedItemKind implements _is.SerializableModel {
         return FeedItemKind.post;
       case 'review':
         return FeedItemKind.review;
+      case 'official':
+        return FeedItemKind.official;
       default:
         throw ArgumentError(
           'Value "$name" cannot be converted to "FeedItemKind"',

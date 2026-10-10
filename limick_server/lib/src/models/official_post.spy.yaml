@@ -1,0 +1,25 @@
+### A post from the official @limick account. Daily posts are built from
+### real data (books, generated posts, activity counts); nothing is invented.
+class: OfficialPost
+table: official_post
+fields:
+  kind: OfficialPostKind
+  title: String
+  body: String
+  ### A book to open from the post, if any.
+  bookId: int?
+  ### A generated post to open from the post, if any.
+  postId: int?
+  ### What the call-to-action button does: openBook, openPost, startBreak,
+  ### openRooms, openWords, openDiscover.
+  action: String?
+  actionLabel: String?
+  ### Tips are shown in this order.
+  position: int, default=0
+  ### yyyy-mm-dd for daily posts, so each kind is published once a day.
+  day: String?
+  createdAt: DateTime, default=now
+indexes:
+  official_post_day_idx:
+    fields: kind, day
+    unique: true

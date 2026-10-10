@@ -1,0 +1,11 @@
+### Which official posts a reader has already been shown.
+class: OfficialSeen
+table: official_seen
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  officialPostId: int, relation(parent=official_post, onDelete=Cascade)
+  createdAt: DateTime, default=now
+indexes:
+  official_seen_unique_idx:
+    fields: profileId, officialPostId
+    unique: true

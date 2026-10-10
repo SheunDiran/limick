@@ -87,6 +87,7 @@ class _PostCardState extends State<PostCard> {
       final result = await client.feed.answerQuiz(post.id!, index);
       _update(
         item.copyWith(
+          quizCounts: result.counts,
           quizChoice: index,
           quizCorrectIndex: result.correctIndex,
           quizExplanation: result.explanation,
@@ -242,10 +243,25 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _body(BuildContext context, String text, {double size = 15.5}) => Text(
+  Widget _body(BuildContext context, String text, {double size = 16}) => Text(
     text,
-    style: TextStyle(fontSize: size, height: 1.5, color: context.palette.ink),
+    style: TextStyle(fontSize: size, height: 1.45, color: context.palette.ink),
   );
+
+  /// An embedded card under the post text, like a quoted post.
+  Widget _embed(BuildContext context, {required Widget child}) {
+    final p = context.palette;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: p.line),
+      ),
+      child: child,
+    );
+  }
 
   Widget _quote(BuildContext context, String text, {bool large = false}) {
     final p = context.palette;
@@ -271,81 +287,94 @@ class _PostCardState extends State<PostCard> {
     final p = context.palette;
     switch (post.kind) {
       case PostKind.quote:
+        // Reaction first, then the quote embedded like a quoted post.
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _quote(context, post.quote ?? '', large: true),
-            const SizedBox(height: 12),
-            Text(
-              post.body,
-              style: TextStyle(color: p.muted, fontSize: 14.5, height: 1.45),
+            _body(context, post.body),
+            _embed(
+              context,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '“${post.quote ?? ''}”',
+                    style: serif(size: 19, color: p.ink, height: 1.4),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${book.author} · ${book.title}',
+                    style: TextStyle(fontSize: 12.5, color: p.faint),
+                  ),
+                ],
+              ),
             ),
           ],
         );
       case PostKind.word:
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: p.raised,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'WORD',
-                style: TextStyle(
-                  fontSize: 11,
-                  letterSpacing: 1.6,
-                  color: p.accent,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text.rich(
-                TextSpan(
-                  children: [
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _body(context, post.body),
+            _embed(
+              context,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text.rich(
                     TextSpan(
-                      text: post.word ?? '',
+                      children: [
+                        TextSpan(
+                          text: post.word ?? '',
+                          style: serif(
+                            size: 28,
+                            weight: FontWeight.w600,
+                            color: p.ink,
+                            height: 1.1,
+                          ),
+                        ),
+                        if ((post.wordPartOfSpeech ?? '').isNotEmpty)
+                          TextSpan(
+                            text: '  ${post.wordPartOfSpeech}',
+                            style: serif(
+                              size: 15,
+                              style: FontStyle.italic,
+                              color: p.muted,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    post.wordDefinition ?? '',
+                    style: TextStyle(fontSize: 15, color: p.ink, height: 1.45),
+                  ),
+                  if (post.quote != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      '“${post.quote}”',
                       style: serif(
-                        size: 30,
-                        weight: FontWeight.w600,
-                        color: p.ink,
-                        height: 1.1,
+                        size: 15,
+                        style: FontStyle.italic,
+                        color: p.muted,
                       ),
                     ),
-                    if ((post.wordPartOfSpeech ?? '').isNotEmpty)
-                      TextSpan(
-                        text: '  ${post.wordPartOfSpeech}',
-                        style: serif(
-                          size: 16,
-                          style: FontStyle.italic,
-                          color: p.muted,
-                        ),
-                      ),
                   ],
-                ),
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 32),
+                    ),
+                    onPressed: _saveWord,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Save to word bank'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                post.wordDefinition ?? '',
-                style: TextStyle(fontSize: 15.5, color: p.ink, height: 1.45),
-              ),
-              if (post.quote != null) _quote(context, post.quote!),
-              const SizedBox(height: 12),
-              Text(
-                post.body,
-                style: TextStyle(color: p.muted, fontSize: 14, height: 1.45),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _saveWord,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Save to word bank'),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       case PostKind.thread:
         final parts = post.parts ?? const [];
@@ -394,7 +423,7 @@ class _PostCardState extends State<PostCard> {
                   minimumSize: const Size(0, 36),
                 ),
                 onPressed: () => setState(() => threadOpen = true),
-                child: Text('Show thread · ${parts.length} more'),
+                child: Text('Show this thread (${parts.length} more)'),
               ),
           ],
         );
@@ -523,6 +552,8 @@ class _Action extends StatelessWidget {
   }
 }
 
+/// A quiz shown as a poll. After answering, real percentages appear and the
+/// right answer is marked.
 class _Quiz extends StatelessWidget {
   final FeedItem item;
   final bool busy;
@@ -535,74 +566,58 @@ class _Quiz extends StatelessWidget {
     final post = item.post!;
     final answered = item.quizChoice != null;
     final options = post.quizOptions ?? const [];
+    final counts = item.quizCounts ?? List.filled(options.length, 0);
+    final total = counts.fold<int>(0, (a, b) => a + b);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'QUIZ',
-          style: TextStyle(
-            fontSize: 11,
-            letterSpacing: 1.6,
-            color: p.accent,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
           post.body,
-          style: serif(
-            size: 20,
-            weight: FontWeight.w500,
-            color: p.ink,
-            height: 1.3,
-          ),
+          style: TextStyle(fontSize: 16, height: 1.45, color: p.ink),
         ),
         const SizedBox(height: 12),
         for (final (i, option) in options.indexed)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: _QuizOption(
+            child: _PollOption(
               label: option,
-              state: !answered
-                  ? _OptionState.open
-                  : i == item.quizCorrectIndex
-                  ? _OptionState.correct
-                  : i == item.quizChoice
-                  ? _OptionState.wrong
-                  : _OptionState.dim,
+              share: answered && total > 0 && i < counts.length
+                  ? counts[i] / total
+                  : null,
+              correct: answered && i == item.quizCorrectIndex,
+              chosen: answered && i == item.quizChoice,
               onTap: answered || busy ? null : () => onAnswer(i),
             ),
           ),
+        Text(
+          answered
+              ? '${compactCount(total)} ${total == 1 ? 'vote' : 'votes'}'
+              : 'Tap an answer to see how everyone voted',
+          style: TextStyle(fontSize: 12.5, color: p.faint),
+        ),
         AnimatedSize(
           duration: const Duration(milliseconds: 250),
           child: answered
               ? Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.quizChoice == item.quizCorrectIndex
-                            ? 'Correct.'
-                            : 'Not quite.',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: item.quizChoice == item.quizCorrectIndex
-                              ? p.good
-                              : p.bad,
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: item.quizChoice == item.quizCorrectIndex
+                              ? 'Got it. '
+                              : 'Not quite. ',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: item.quizChoice == item.quizCorrectIndex
+                                ? p.good
+                                : p.bad,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.quizExplanation ?? '',
-                        style: TextStyle(color: p.muted, height: 1.45),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${compactCount(post.quizAnswerCount)} answered',
-                        style: TextStyle(fontSize: 12, color: p.faint),
-                      ),
-                    ],
+                        TextSpan(text: item.quizExplanation ?? ''),
+                      ],
+                    ),
+                    style: TextStyle(color: p.muted, height: 1.45),
                   ),
                 )
               : const SizedBox(width: double.infinity),
@@ -612,50 +627,98 @@ class _Quiz extends StatelessWidget {
   }
 }
 
-enum _OptionState { open, correct, wrong, dim }
-
-class _QuizOption extends StatelessWidget {
+/// One option of a poll. Before voting it's a button; afterwards it fills to
+/// its real share of the votes.
+class _PollOption extends StatelessWidget {
   final String label;
-  final _OptionState state;
+  final double? share;
+  final bool correct;
+  final bool chosen;
   final VoidCallback? onTap;
-  const _QuizOption({required this.label, required this.state, this.onTap});
+
+  const _PollOption({
+    required this.label,
+    required this.share,
+    required this.onTap,
+    this.correct = false,
+    this.chosen = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final (border, fill, text) = switch (state) {
-      _OptionState.open => (p.line, Colors.transparent, p.ink),
-      _OptionState.correct => (p.good, p.good.withValues(alpha: 0.12), p.ink),
-      _OptionState.wrong => (p.bad, p.bad.withValues(alpha: 0.10), p.ink),
-      _OptionState.dim => (p.line, Colors.transparent, p.faint),
-    };
+    final revealed = share != null;
+    final fill = correct ? p.good : (chosen ? p.bad : p.faint);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 44,
           decoration: BoxDecoration(
-            color: fill,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: border),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: revealed
+                  ? Colors.transparent
+                  : p.accent.withValues(alpha: 0.6),
+            ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(color: text, fontSize: 14.5),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                if (revealed)
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: share!),
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, v, _) => FractionallySizedBox(
+                      widthFactor: v.clamp(0.0, 1.0),
+                      heightFactor: 1,
+                      child: Container(
+                        color: fill.withValues(
+                          alpha: correct || chosen ? 0.28 : 0.16,
+                        ),
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            color: revealed ? p.ink : p.accent,
+                            fontWeight: correct || chosen || !revealed
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      if (correct) ...[
+                        Icon(Icons.check_circle, size: 16, color: p.good),
+                        const SizedBox(width: 6),
+                      ],
+                      if (revealed)
+                        Text(
+                          '${(share! * 100).round()}%',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: p.ink,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              if (state == _OptionState.correct)
-                Icon(Icons.check_rounded, size: 18, color: p.good),
-              if (state == _OptionState.wrong)
-                Icon(Icons.close_rounded, size: 18, color: p.bad),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -663,6 +726,7 @@ class _QuizOption extends StatelessWidget {
   }
 }
 
+/// A debate shown as a two-option poll with real vote shares.
 class _Debate extends StatelessWidget {
   final FeedItem item;
   final bool busy;
@@ -675,98 +739,48 @@ class _Debate extends StatelessWidget {
     final post = item.post!;
     final voted = item.debateVote != null;
     final total = post.agreeCount + post.disagreeCount;
-    final agreeShare = total == 0 ? 0.5 : post.agreeCount / total;
+    final agree = total == 0 ? 0.0 : post.agreeCount / total;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'DEBATE',
-          style: TextStyle(
-            fontSize: 11,
-            letterSpacing: 1.6,
-            color: p.accent,
-            fontWeight: FontWeight.w700,
-          ),
+          post.body,
+          style: TextStyle(fontSize: 16, height: 1.45, color: p.ink),
+        ),
+        const SizedBox(height: 12),
+        _PollOption(
+          label: 'Agree',
+          share: voted ? agree : null,
+          chosen: item.debateVote == true,
+          onTap: busy ? null : () => onVote(true),
+        ),
+        const SizedBox(height: 8),
+        _PollOption(
+          label: 'Disagree',
+          share: voted ? 1 - agree : null,
+          chosen: item.debateVote == false,
+          onTap: busy ? null : () => onVote(false),
         ),
         const SizedBox(height: 6),
         Text(
-          post.body,
-          style: serif(
-            size: 20,
-            weight: FontWeight.w500,
-            color: p.ink,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(child: _voteButton(context, 'Agree', true)),
-            const SizedBox(width: 10),
-            Expanded(child: _voteButton(context, 'Disagree', false)),
-          ],
+          voted
+              ? '${compactCount(total)} ${total == 1 ? 'vote' : 'votes'} · tap to change yours'
+              : 'Pick a side to see the split',
+          style: TextStyle(fontSize: 12.5, color: p.faint),
         ),
         AnimatedSize(
           duration: const Duration(milliseconds: 300),
-          child: voted
+          child: voted && (item.quizExplanation ?? '').isNotEmpty
               ? Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(99),
-                        child: SizedBox(
-                          height: 6,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: (agreeShare * 1000).round().clamp(1, 999),
-                                child: Container(color: p.accent),
-                              ),
-                              Expanded(
-                                flex: ((1 - agreeShare) * 1000).round().clamp(
-                                  1,
-                                  999,
-                                ),
-                                child: Container(color: p.line),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${(agreeShare * 100).round()}% agree · ${compactCount(total)} votes',
-                        style: TextStyle(fontSize: 12, color: p.faint),
-                      ),
-                      if ((item.quizExplanation ?? '').isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          item.quizExplanation!,
-                          style: TextStyle(color: p.muted, height: 1.45),
-                        ),
-                      ],
-                    ],
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    item.quizExplanation!,
+                    style: TextStyle(color: p.muted, height: 1.45),
                   ),
                 )
               : const SizedBox(width: double.infinity),
         ),
       ],
-    );
-  }
-
-  Widget _voteButton(BuildContext context, String label, bool agree) {
-    final p = context.palette;
-    final selected = item.debateVote == agree;
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        backgroundColor: selected ? p.ink : null,
-        foregroundColor: selected ? p.background : p.ink,
-        side: BorderSide(color: selected ? p.ink : p.line),
-      ),
-      onPressed: busy ? null : () => onVote(agree),
-      child: Text(label),
     );
   }
 }

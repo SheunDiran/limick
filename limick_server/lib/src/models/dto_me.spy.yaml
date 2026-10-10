@@ -5,3 +5,4 @@ fields:
   suggestedHandle: String
   activeBreak: StudyBreak?
   dueWords: int, default=0
+  unreadNotifications: int, default=0

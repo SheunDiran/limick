@@ -12,6 +12,15 @@ class PostShareRoute extends Route {
 
   @override
   Future<Result> handleCall(Session session, Request request) async {
+    // Where "Open in Limick" goes. Defaults to the Flutter web app served by
+    // this server at /app; set `publicAppUrl` (passwords.yaml or env
+    // SERVERPOD_PASSWORD_publicAppUrl) when the app is hosted elsewhere,
+    // e.g. on Vercel.
+    final appUrl = _escape(
+      session.passwords['publicAppUrl']?.trim().isNotEmpty == true
+          ? session.passwords['publicAppUrl']!.trim()
+          : '/app',
+    );
     int? postId;
     try {
       postId = request.pathParameters.get(_idParam);
@@ -30,7 +39,7 @@ class PostShareRoute extends Route {
     if (post == null) {
       return Response.notFound(
         body: Body.fromString(
-          _notFoundHtml(postId),
+          _notFoundHtml(postId, appUrl),
           mimeType: MimeType.html,
         ),
       );
@@ -38,7 +47,7 @@ class PostShareRoute extends Route {
 
     final book = await Book.db.findById(session, post.bookId);
     final chapter = await Chapter.db.findById(session, post.chapterId);
-    final html = _buildHtml(post, book, chapter);
+    final html = _buildHtml(post, book, chapter, appUrl);
 
     return Response.ok(
       body: Body.fromString(html, mimeType: MimeType.html),
@@ -47,7 +56,7 @@ class PostShareRoute extends Route {
 
   static String _escape(String text) => const HtmlEscape().convert(text);
 
-  static String _notFoundHtml(int id) {
+  static String _notFoundHtml(int id, String appUrl) {
     return '''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,13 +95,18 @@ class PostShareRoute extends Route {
   <div class="card">
     <h1>Post not found</h1>
     <p>Post #$id may have been removed or does not exist.</p>
-    <a href="/app">Open Limick</a>
+    <a href="$appUrl">Open Limick</a>
   </div>
 </body>
 </html>''';
   }
 
-  static String _buildHtml(Post post, Book? book, Chapter? chapter) {
+  static String _buildHtml(
+    Post post,
+    Book? book,
+    Chapter? chapter,
+    String appUrl,
+  ) {
     final bookTitle = book?.title ?? 'Classic Literature';
     final author = book?.author ?? 'Public Domain';
     final handle = book?.handle ?? 'limick';
@@ -331,7 +345,7 @@ class PostShareRoute extends Route {
 <body>
   <div class="container">
     <div class="header">
-      <a href="/app" class="brand">
+      <a href="$appUrl" class="brand">
         <span class="brand-flame">✦</span>
         <span>Limick</span>
       </a>
@@ -364,7 +378,7 @@ class PostShareRoute extends Route {
       ${chapterTitle.isNotEmpty ? '<div class="chapter-tag">📖 $chapterTitle</div>' : ''}
 
       <div class="cta-row">
-        <a href="/app" class="cta-btn">Open in Limick App</a>
+        <a href="$appUrl" class="cta-btn">Open in Limick App</a>
       </div>
     </div>
 

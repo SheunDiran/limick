@@ -19,6 +19,10 @@ class AppState extends ChangeNotifier {
   StudyBreak? activeBreak;
   Timer? _breakTimer;
 
+  /// Lets any screen ask the home shell to switch tabs (0 home, 1 discover,
+  /// 2 rooms, 3 words, 4 profile).
+  final tabRequest = ValueNotifier<int?>(null);
+
   /// Called by the break timer when the planned time is up.
   final breakFinished = StreamController<StudyBreak>.broadcast();
 

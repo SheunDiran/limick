@@ -19,6 +19,7 @@ import 'package:limick_server/src/generated/dto_room_message_view.dart'
     as _icet9mik;
 import 'package:limick_server/src/generated/dto_room_view.dart' as _ieqa76y5;
 import 'package:limick_server/src/generated/dto_view_signal.dart' as _ik2oo8gm;
+import 'package:limick_server/src/generated/notification.dart' as _igqfg1a1;
 import 'package:limick_server/src/generated/saved_word.dart' as _i351mgoy;
 import 'package:serverpod/protocol.dart' as _isp;
 import 'package:serverpod/serverpod.dart' as _is;
@@ -56,7 +57,14 @@ import 'dto_room_message_view.dart' as _idb2b7gg;
 import 'dto_room_view.dart' as _i1rlo7qg;
 import 'dto_view_signal.dart' as _iamhpvfi;
 import 'feed_item_kind.dart' as _i5lurufd;
+import 'future_calls_generated_models/book_reply_future_call_reply_model.dart'
+    as _is9mb6h6;
 import 'live_event_type.dart' as _ijk6vck4;
+import 'notification.dart' as _irt10kca;
+import 'notification_kind.dart' as _ipnxo26v;
+import 'official_post.dart' as _i2bhchuw;
+import 'official_post_kind.dart' as _iwjxx537;
+import 'official_seen.dart' as _ibehfvf0;
 import 'post.dart' as _iwx4avst;
 import 'post_kind.dart' as _i8wd172o;
 import 'post_like.dart' as _i2v49lle;
@@ -106,6 +114,11 @@ export 'dto_room_view.dart';
 export 'dto_view_signal.dart';
 export 'feed_item_kind.dart';
 export 'live_event_type.dart';
+export 'notification.dart';
+export 'notification_kind.dart';
+export 'official_post.dart';
+export 'official_post_kind.dart';
+export 'official_seen.dart';
 export 'post.dart';
 export 'post_kind.dart';
 export 'post_like.dart';
@@ -635,6 +648,12 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'String',
         ),
         _isp.ColumnDefinition(
+          name: 'asBookId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
           name: 'likeCount',
           columnType: _isp.ColumnType.bigint,
           isNullable: false,
@@ -861,6 +880,180 @@ class Protocol extends _is.DatabaseSerializationManager {
       managed: true,
     ),
     _isp.TableDefinition(
+      name: 'official_post',
+      dartName: 'OfficialPost',
+      schema: 'public',
+      module: 'limick',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'kind',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:OfficialPostKind',
+        ),
+        _isp.ColumnDefinition(
+          name: 'title',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'body',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'bookId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'postId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'action',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'actionLabel',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'position',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '0',
+        ),
+        _isp.ColumnDefinition(
+          name: 'day',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'official_post_day_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'kind',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'day',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'official_seen',
+      dartName: 'OfficialSeen',
+      schema: 'public',
+      module: 'limick',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'profileId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'officialPostId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'official_seen_fk_0',
+          columns: ['profileId'],
+          referenceTable: 'reader',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+        _isp.ForeignKeyDefinition(
+          constraintName: 'official_seen_fk_1',
+          columns: ['officialPostId'],
+          referenceTable: 'official_post',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'official_seen_unique_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'profileId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'officialPostId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
       name: 'post',
       dartName: 'Post',
       schema: 'public',
@@ -902,6 +1095,12 @@ class Protocol extends _is.DatabaseSerializationManager {
           columnType: _isp.ColumnType.text,
           isNullable: false,
           dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'style',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
         ),
         _isp.ColumnDefinition(
           name: 'quote',
@@ -1506,6 +1705,13 @@ class Protocol extends _is.DatabaseSerializationManager {
           columnDefault: '0',
         ),
         _isp.ColumnDefinition(
+          name: 'official',
+          columnType: _isp.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+          columnDefault: 'false',
+        ),
+        _isp.ColumnDefinition(
           name: 'createdAt',
           columnType: _isp.ColumnType.timestampWithoutTimeZone,
           isNullable: false,
@@ -1539,6 +1745,103 @@ class Protocol extends _is.DatabaseSerializationManager {
           ],
           type: 'btree',
           isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'reader_notification',
+      dartName: 'ReaderNotification',
+      schema: 'public',
+      module: 'limick',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'profileId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'actorName',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'actorHandle',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'String',
+        ),
+        _isp.ColumnDefinition(
+          name: 'kind',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:NotificationKind',
+        ),
+        _isp.ColumnDefinition(
+          name: 'postId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'commentId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'read',
+          columnType: _isp.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+          columnDefault: 'false',
+        ),
+        _isp.ColumnDefinition(
+          name: 'createdAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+          columnDefault: 'now',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'reader_notification_fk_0',
+          columns: ['profileId'],
+          referenceTable: 'reader',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.cascade,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'reader_notification_inbox_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'profileId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'read',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
           isPrimary: false,
         ),
       ],
@@ -2407,8 +2710,26 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _i5lurufd.FeedItemKind) {
       return _i5lurufd.FeedItemKind.fromJson(data) as T;
     }
+    if (t == _is9mb6h6.BookReplyFutureCallReplyModel) {
+      return _is9mb6h6.BookReplyFutureCallReplyModel.fromJson(data) as T;
+    }
     if (t == _ijk6vck4.LiveEventType) {
       return _ijk6vck4.LiveEventType.fromJson(data) as T;
+    }
+    if (t == _irt10kca.ReaderNotification) {
+      return _irt10kca.ReaderNotification.fromJson(data) as T;
+    }
+    if (t == _ipnxo26v.NotificationKind) {
+      return _ipnxo26v.NotificationKind.fromJson(data) as T;
+    }
+    if (t == _i2bhchuw.OfficialPost) {
+      return _i2bhchuw.OfficialPost.fromJson(data) as T;
+    }
+    if (t == _iwjxx537.OfficialPostKind) {
+      return _iwjxx537.OfficialPostKind.fromJson(data) as T;
+    }
+    if (t == _ibehfvf0.OfficialSeen) {
+      return _ibehfvf0.OfficialSeen.fromJson(data) as T;
     }
     if (t == _iwx4avst.Post) {
       return _iwx4avst.Post.fromJson(data) as T;
@@ -2561,9 +2882,33 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_i5lurufd.FeedItemKind?>()) {
       return (data != null ? _i5lurufd.FeedItemKind.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_is9mb6h6.BookReplyFutureCallReplyModel?>()) {
+      return (data != null
+              ? _is9mb6h6.BookReplyFutureCallReplyModel.fromJson(data)
+              : null)
+          as T;
+    }
     if (t == _is.getType<_ijk6vck4.LiveEventType?>()) {
       return (data != null ? _ijk6vck4.LiveEventType.fromJson(data) : null)
           as T;
+    }
+    if (t == _is.getType<_irt10kca.ReaderNotification?>()) {
+      return (data != null ? _irt10kca.ReaderNotification.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_ipnxo26v.NotificationKind?>()) {
+      return (data != null ? _ipnxo26v.NotificationKind.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_i2bhchuw.OfficialPost?>()) {
+      return (data != null ? _i2bhchuw.OfficialPost.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_iwjxx537.OfficialPostKind?>()) {
+      return (data != null ? _iwjxx537.OfficialPostKind.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_ibehfvf0.OfficialSeen?>()) {
+      return (data != null ? _ibehfvf0.OfficialSeen.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_iwx4avst.Post?>()) {
       return (data != null ? _iwx4avst.Post.fromJson(data) : null) as T;
@@ -2635,14 +2980,20 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == List<String>) {
       return (data as List).map((e) => deserialize<String>(e)).toList() as T;
     }
+    if (t == List<int>) {
+      return (data as List).map((e) => deserialize<int>(e)).toList() as T;
+    }
+    if (t == _is.getType<List<int>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<int>(e)).toList()
+              : null)
+          as T;
+    }
     if (t == List<_i8qjxz8q.FeedItem>) {
       return (data as List)
               .map((e) => deserialize<_i8qjxz8q.FeedItem>(e))
               .toList()
           as T;
-    }
-    if (t == List<int>) {
-      return (data as List).map((e) => deserialize<int>(e)).toList() as T;
     }
     if (t == _is.getType<List<String>?>()) {
       return (data != null
@@ -2678,6 +3029,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == List<_isq1wlnx.Author>) {
       return (data as List)
               .map((e) => deserialize<_isq1wlnx.Author>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_igqfg1a1.ReaderNotification>) {
+      return (data as List)
+              .map((e) => deserialize<_igqfg1a1.ReaderNotification>(e))
               .toList()
           as T;
     }
@@ -2743,7 +3100,14 @@ class Protocol extends _is.DatabaseSerializationManager {
       _i1rlo7qg.RoomView => 'RoomView',
       _iamhpvfi.ViewSignal => 'ViewSignal',
       _i5lurufd.FeedItemKind => 'FeedItemKind',
+      _is9mb6h6.BookReplyFutureCallReplyModel =>
+        'BookReplyFutureCallReplyModel',
       _ijk6vck4.LiveEventType => 'LiveEventType',
+      _irt10kca.ReaderNotification => 'ReaderNotification',
+      _ipnxo26v.NotificationKind => 'NotificationKind',
+      _i2bhchuw.OfficialPost => 'OfficialPost',
+      _iwjxx537.OfficialPostKind => 'OfficialPostKind',
+      _ibehfvf0.OfficialSeen => 'OfficialSeen',
       _iwx4avst.Post => 'Post',
       _i8wd172o.PostKind => 'PostKind',
       _i2v49lle.PostLike => 'PostLike',
@@ -2836,8 +3200,20 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'ViewSignal';
       case _i5lurufd.FeedItemKind():
         return 'FeedItemKind';
+      case _is9mb6h6.BookReplyFutureCallReplyModel():
+        return 'BookReplyFutureCallReplyModel';
       case _ijk6vck4.LiveEventType():
         return 'LiveEventType';
+      case _irt10kca.ReaderNotification():
+        return 'ReaderNotification';
+      case _ipnxo26v.NotificationKind():
+        return 'NotificationKind';
+      case _i2bhchuw.OfficialPost():
+        return 'OfficialPost';
+      case _iwjxx537.OfficialPostKind():
+        return 'OfficialPostKind';
+      case _ibehfvf0.OfficialSeen():
+        return 'OfficialSeen';
       case _iwx4avst.Post():
         return 'Post';
       case _i8wd172o.PostKind():
@@ -2990,8 +3366,26 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'FeedItemKind') {
       return deserialize<_i5lurufd.FeedItemKind>(data['data']);
     }
+    if (dataClassName == 'BookReplyFutureCallReplyModel') {
+      return deserialize<_is9mb6h6.BookReplyFutureCallReplyModel>(data['data']);
+    }
     if (dataClassName == 'LiveEventType') {
       return deserialize<_ijk6vck4.LiveEventType>(data['data']);
+    }
+    if (dataClassName == 'ReaderNotification') {
+      return deserialize<_irt10kca.ReaderNotification>(data['data']);
+    }
+    if (dataClassName == 'NotificationKind') {
+      return deserialize<_ipnxo26v.NotificationKind>(data['data']);
+    }
+    if (dataClassName == 'OfficialPost') {
+      return deserialize<_i2bhchuw.OfficialPost>(data['data']);
+    }
+    if (dataClassName == 'OfficialPostKind') {
+      return deserialize<_iwjxx537.OfficialPostKind>(data['data']);
+    }
+    if (dataClassName == 'OfficialSeen') {
+      return deserialize<_ibehfvf0.OfficialSeen>(data['data']);
     }
     if (dataClassName == 'Post') {
       return deserialize<_iwx4avst.Post>(data['data']);
@@ -3102,6 +3496,12 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _iv1pbuct.CommentLike.t;
       case _i1ao0q81.DebateVote:
         return _i1ao0q81.DebateVote.t;
+      case _irt10kca.ReaderNotification:
+        return _irt10kca.ReaderNotification.t;
+      case _i2bhchuw.OfficialPost:
+        return _i2bhchuw.OfficialPost.t;
+      case _ibehfvf0.OfficialSeen:
+        return _ibehfvf0.OfficialSeen.t;
       case _iwx4avst.Post:
         return _iwx4avst.Post.t;
       case _i2v49lle.PostLike:

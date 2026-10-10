@@ -62,4 +62,5 @@ Author authorOf(Reader profile) => Author(
   handle: profile.handle,
   displayName: profile.displayName,
   avatarHue: profile.avatarHue,
+  official: profile.official,
 );

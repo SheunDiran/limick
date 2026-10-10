@@ -4,3 +4,5 @@ fields:
   correctIndex: int
   explanation: String
   answerCount: int
+  ### Real answer counts per option, including this answer.
+  counts: List<int>?

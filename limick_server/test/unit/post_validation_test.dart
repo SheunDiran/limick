@@ -1,3 +1,4 @@
+import 'package:limick_server/src/ai/post_generator.dart';
 import 'package:limick_server/src/ai/post_validator.dart';
 import 'package:limick_server/src/generated/protocol.dart';
 import 'package:test/test.dart';
@@ -39,6 +40,49 @@ void main() {
   };
 
   group('Given post validation engine', () {
+    test(
+      'when a post cites evidence that is not in the passage then it is rejected',
+      () {
+        final response = wrap([
+          {
+            'kind': 'insight',
+            'style': 'hotTake',
+            'evidence': 'Darwin says pigeons are secretly dinosaurs.',
+            'body': 'hot take: pigeons are dinosaurs and Darwin knew it.',
+            'quote': '',
+            'topic': 'science',
+          },
+        ]);
+        expect(validateGeneratedPosts(response, testBook, passage), isEmpty);
+      },
+    );
+
+    test(
+      'when a post cites real evidence then it is highlighted in the reader',
+      () {
+        final response = wrap([
+          {
+            'kind': 'insight',
+            'style': 'til',
+            'evidence': 'they generally differ more from each other',
+            'body':
+                'TIL farm animals of one breed vary more than wild animals of one species.',
+            'quote': '',
+            'topic': 'science',
+          },
+        ]);
+        final validated = validateGeneratedPosts(response, testBook, passage);
+        expect(validated.single.style, 'til');
+        expect(
+          testChapter.text.substring(
+            validated.single.passageStart,
+            validated.single.passageEnd,
+          ),
+          'they generally differ more from each other',
+        );
+      },
+    );
+
     test('when quote is invented then quote post is rejected', () {
       final response = wrap([
         {
@@ -128,6 +172,7 @@ void main() {
       final negativeIndex = wrap([
         {
           'kind': 'quiz',
+          'evidence': 'one of the first points which strikes us',
           'body': 'What do cultivated varieties do?',
           'options': ['They differ more', 'They are identical', 'They vanish'],
           'answerIndex': -1,
@@ -140,6 +185,7 @@ void main() {
       final outOfBoundsIndex = wrap([
         {
           'kind': 'quiz',
+          'evidence': 'one of the first points which strikes us',
           'body': 'What do cultivated varieties do?',
           'options': ['They differ more', 'They are identical', 'They vanish'],
           'answerIndex': 3,
@@ -159,6 +205,7 @@ void main() {
         final twoOptions = wrap([
           {
             'kind': 'quiz',
+            'evidence': 'one of the first points which strikes us',
             'body': 'What do cultivated varieties do?',
             'options': ['They differ more', 'They are identical'],
             'answerIndex': 0,
@@ -170,6 +217,7 @@ void main() {
         final duplicateOptions = wrap([
           {
             'kind': 'quiz',
+            'evidence': 'one of the first points which strikes us',
             'body': 'What do cultivated varieties do?',
             'options': ['They differ more', 'They differ more', 'They vanish'],
             'answerIndex': 0,
@@ -187,6 +235,7 @@ void main() {
       final validQuiz = wrap([
         {
           'kind': 'quiz',
+          'evidence': 'one of the first points which strikes us',
           'body': 'What do cultivated varieties do?',
           'options': ['They differ more', 'They are identical', 'They vanish'],
           'answerIndex': 0,
@@ -208,11 +257,13 @@ void main() {
         final response = wrap([
           {
             'kind': 'insight',
+            'evidence': 'one of the first points which strikes us',
             'body': 'First insight on variation under domestication.',
             'topic': 'science',
           },
           {
             'kind': 'insight',
+            'evidence': 'one of the first points which strikes us',
             'body': 'Second insight covering another biological concept.',
             'topic': 'science',
           },
@@ -228,6 +279,7 @@ void main() {
       final response = wrap([
         {
           'kind': 'thread',
+          'evidence': 'one of the first points which strikes us',
           'body': 'Opening hook of an evolutionary thread.',
           'parts': ['Single follow-up part that is insufficient.'],
           'topic': 'science',
@@ -242,6 +294,7 @@ void main() {
       final response = wrap([
         {
           'kind': 'debate',
+          'evidence': 'one of the first points which strikes us',
           'body':
               'Domestic varieties diverge faster than wild species. Agree or disagree?',
           'explanation':
@@ -256,4 +309,24 @@ void main() {
       expect(validated.first.quizExplanation, contains('artificial selection'));
     });
   });
+
+  test(
+    'Given a post with em dashes when humanized then they become hyphens, quotes untouched',
+    () {
+      final post = Post(
+        bookId: 1,
+        chapterId: 1,
+        chapterPosition: 0,
+        kind: PostKind.insight,
+        body: 'Darwin\u2014of all people\u2014saw it first.',
+        quote: 'a quote\u2014kept verbatim',
+        primaryTopic: Topic.science,
+        passageStart: 0,
+        passageEnd: 1,
+      );
+      final human = humanize(post);
+      expect(human.body, 'Darwin - of all people - saw it first.');
+      expect(human.quote, 'a quote\u2014kept verbatim');
+    },
+  );
 }

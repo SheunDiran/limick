@@ -18,7 +18,9 @@ Each book acts as its own creator account (e.g. `@OriginOfSpecies`, `@WealthOfNa
 
 ## Key Features
 
-- **Personalised "For You" Feed**: Ranks posts using multi-factor affinity scores (dwell time, likes, saves, quiz responses, comments, follows). Incorporates exploration slots (15% out-of-bubble discovery) and diversity rules (no book repeated twice within three cards; rotating post kinds).
+- **Personalised "For You" Feed**: Ranks posts using multi-factor affinity scores (dwell time, likes, saves, quiz responses, comments, follows). Reserves one slot in six for something outside your usual topics and diversity rules (no book repeated twice within three cards; rotating post kinds).
+- **Posts that read like real social posts**: hot takes, storytime, "POV:", "TIL", "nobody talks about…", then-vs-now, relatable memes, quote reactions, cliffhanger threads, polls and ragebait-style debates. Formats are matched to the book's subject (storytime for novels, then-vs-now for medicine and science, spicy takes for philosophy and politics).
+- **Grounded, not made up**: every post must cite the sentence in the passage that proves it; the server checks that sentence word for word and drops the post if it isn't there. Quotes and vocabulary are checked the same way.
 - **Six Grounded Post Kinds**:
   - **Insight**: Punchy analysis of a core thesis from the passage.
   - **Quote**: Striking excerpt, verified character-for-character against the book text.
@@ -29,9 +31,11 @@ Each book acts as its own creator account (e.g. `@OriginOfSpecies`, `@WealthOfNa
 - **In-App Reader**: Tap any card to jump directly to the chapter and highlighted passage that generated it. Tracks reading progress and resume points.
 - **Real-Time Topic & Book Rooms**: Live discussion rooms for each subject (Philosophy, Science, Law, Medicine, etc.) and per-book clubs, with real-time presence indicators via Serverpod streams.
 - **Live Threaded Comments**: One-level nested discussions with real-time WebSocket updates, likes, and moderation filtering.
-- **Spaced-Repetition Word Bank**: Leitner 5-box review system seamlessly woven into the feed and available in a dedicated study tab.
+- **Spaced-Repetition Word Bank**: Leitner schedule (reviews spaced from 1 to 60 days), with review cards woven into the feed and a dedicated study tab.
 - **Study Breaks & Streaks**: Timed reading break sessions with summary retrospectives, streak tracking across timezones, and GDPR-compliant data export/account deletion.
 - **Shareable Web Previews (`/p/:id`)**: Server-rendered cards with OpenGraph metadata, allowing posts to be shared anywhere on the web.
+- **Official @limick account**: a welcome post and how-to tips for new readers, plus daily posts built only from real data: *Book of the day* (a real book from the library), *Word of the day* (a real word post), and a weekly digest with actual counts from the database. Each reader sees each one once. Topic rooms get a welcome and a daily *Question of the day* taken from a real debate post.
+- **Ask the book**: ask a question in the comments of any post and the book's own account replies, grounded in the passage the post came from. Replies are AI-written, labelled "AI · from the text", and rate-limited per reader.
 
 ---
 
@@ -54,14 +58,14 @@ graph TD
         Streams["Realtime Streams (Rooms & Live Comments)"]
         WebServer["Relic Web Server (/app, /p/:id with OG tags)"]
         Cache["Local Cache (Chapters, Rate Limiting, Status)"]
-        ORM["Serverpod ORM (25+ Models, Transactions)"]
+        ORM["Serverpod ORM (24 tables, Transactions)"]
         FutureCalls["FutureCall Scheduler (library-tick)"]
     end
 
     subgraph Data ["Database & External Services"]
         PG[(PostgreSQL Database)]
         Gutenberg["Project Gutenberg (EPUB/Text & Catalog)"]
-        Claude["Claude Haiku 4.5 (Structured JSON Output)"]
+        LLM["Groq + Gemini (JSON-schema output, failover)"]
     end
 
     Client -->|"Serverpod Client (RPC / WebSockets)"| Endpoints
@@ -73,7 +77,7 @@ graph TD
     ORM --> PG
     FutureCalls --> ORM
     FutureCalls --> Gutenberg
-    FutureCalls --> Claude
+    FutureCalls --> LLM
 ```
 
 ---
@@ -85,14 +89,14 @@ Limick is built from the ground up to leverage the full Serverpod ecosystem:
 | Serverpod Feature | How Limick Uses It |
 |---|---|
 | **Authentication & IdP** | `serverpod_auth_idp_server` with email/password authentication, JWT token management, automatic session verification, and secure password hashing. |
-| **ORM & Data Models** | 25+ `.spy.yaml` data models with tables, relations, foreign keys, cascade deletes, and composite indexes (e.g., `Post`, `Book`, `Chapter`, `Reader`, `Comment`, `Room`, `SavedWord`, `TopicAffinity`). |
+| **ORM & Data Models** | 52 `.spy.yaml` models (24 database tables) with relations, foreign keys, cascade deletes, and composite indexes (e.g., `Post`, `Book`, `Chapter`, `Reader`, `Comment`, `Room`, `SavedWord`, `TopicAffinity`). |
 | **RPC Endpoints** | 9 structured endpoints (`profile`, `feed`, `book`, `comment`, `room`, `word`, `studyBreak`, `moderation`, `library`) with session validation, custom `AppException` error hierarchy, and rate limiting. |
 | **Realtime Streams** | WebSocket streaming in `CommentEndpoint.watch` and `RoomEndpoint.live` for instant message delivery and dynamic presence counters. |
-| **FutureCall Scheduling** | Recurring background worker (`library-tick`, every 20s) managing book ingestion, chapter parsing, catalog imports, and LLM post generation. |
+| **FutureCall Scheduling** | Recurring background worker (`library-tick`, every 20s) managing book ingestion, chapter parsing, catalog imports, LLM post generation and the daily official posts; a second FutureCall (`bookReply`) writes book replies to reader questions without blocking the comment request. |
 | **Local Caching** | `session.caches.local` for chapter text caching, rate limit enforcement markers, and public library status metrics. |
 | **Relic Web Server** | Embedded web server serving the Flutter Web single-page application at `/app` and dynamic SSR share cards at `/p/:id` with OpenGraph meta tags. |
 | **Database Transactions & Raw SQL** | Atomic multi-table updates for generation and account deletion, plus raw SQL upserts for high-frequency reader affinity scoring. |
-| **Integration Testing** | Robust end-to-end test suite built with `withServerpod` and `serverpod_test`, utilizing embedded test PostgreSQL without Docker dependencies. |
+| **Integration Testing** | 46 server tests (unit + `withServerpod` integration, including streams) running against Serverpod's embedded test PostgreSQL, no Docker needed. |
 
 ---
 
@@ -109,17 +113,23 @@ Limick is built from the ground up to leverage the full Serverpod ecosystem:
 ## Build & Run Instructions
 
 ### Prerequisites
-- Dart SDK `^3.10.0` or Flutter SDK `^3.35.0`
-- PostgreSQL (or rely on Serverpod's embedded database)
-- Anthropic API Key (for automated post generation)
+- Flutter SDK `^3.44.4` (Dart `^3.12.2`) and the Serverpod CLI 4.0
+- No database setup: Serverpod runs an embedded PostgreSQL
+- A free API key from [Groq](https://console.groq.com/keys) and/or [Google AI Studio (Gemini)](https://aistudio.google.com/apikey). One is enough; both together give more free-tier headroom.
 
 ### 1. Configure Secrets
 Create or edit `limick_server/config/passwords.yaml`:
 ```yaml
 shared:
-  anthropicApiKey: 'your-anthropic-api-key-here'
+  groqApiKey: 'gsk_...'
+  geminiApiKey: 'AIza...'
+  # Optional: override the models (comma separated, tried in order).
+  # groqModels: 'openai/gpt-oss-120b,llama-3.3-70b-versatile'
+  # geminiModels: 'gemini-3.8-flash,gemini-3.5-flash-lite'
 ```
-*(Alternatively, set the environment variable `SERVERPOD_PASSWORD_anthropicApiKey`.)*
+*(Alternatively, set the environment variables `SERVERPOD_PASSWORD_groqApiKey` / `SERVERPOD_PASSWORD_geminiApiKey`.)*
+
+Limick spreads requests across every configured model. When a model hits its free-tier rate limit it cools down for as long as the provider asks, and the next model takes over. Without any key, everything else works and post generation pauses with a warning in the server log.
 
 ### 2. Start the Server & App
 In the server directory:
@@ -135,11 +145,15 @@ serverpod start
 5. Automatically serve the Flutter application.
 
 ### 3. Testing Credentials / Demo Access
-- Sign up with any valid email format (e.g. `judge@limick.app`).
-- In development mode, the email verification code is printed directly to the server console log.
-- Follow the 5-step onboarding flow to pick your field of study, favorite topics, and initial followed books.
-
+- Judges can sign in with **`tester@limick.app` / `limick2026`**: an account already onboarded with a feed tailored to software engineers (technology, science, philosophy, history).
+- Or sign up with any email. In development mode, the verification code is printed in the server console log.
+- Demo accounts are created at server boot from `testerEmail` / `testerPassword` in `passwords.yaml` (not committed).
 ---
+
+## Deploying
+
+- **Server:** [Serverpod Cloud](https://docs.serverpod.dev/cloud) (`serverpod cloud launch`, then `serverpod cloud deploy`). Set the same keys as `passwords.yaml` with `serverpod cloud password set <name> "<value>"`: `groqApiKey`, `geminiApiKey`, and optionally `publicAppUrl` (where shared post pages should link).
+- **Web app:** Vercel. Import the repo with **Root Directory** `limick_flutter` and set the environment variable `SERVER_URL` to the Serverpod API URL. `limick_flutter/vercel.json` and `vercel_build.sh` install Flutter, build the web app with that URL and serve it as a single-page app. The API allows cross-origin requests (token auth, WebSockets for live features), so no proxy is needed.
 
 ## Running Tests
 
@@ -162,7 +176,8 @@ flutter test
 
 - **Development & Architecture**: System architecture design, full-stack scaffolding, complex refactoring, and integration testing built with **Claude Opus 5.5** and Claude Code.
 - **Context Synthesis & Analysis**: Rapid contextual analysis, passage synthesis, and prompt tuning supported by **Gemini 3.8 Flash**.
-- **Runtime Generation**: Posts are generated at runtime by **Claude Haiku 4.5** (`claude-haiku-4-5`) via the Messages API using strict JSON-schema structured outputs.
+- **Runtime Generation**: Posts, book replies and the book blurbs are generated at runtime by free-tier models on **Groq** (`openai/gpt-oss-120b`, `llama-3.3-70b-versatile`) and **Google Gemini** (`gemini-3.8-flash`, `gemini-3.5-flash-lite`), using JSON-schema structured output where the model supports it.
+- **No invented activity**: there are no fake users, comments or statistics. Official posts and room prompts are labelled as coming from @limick and are built from real books and real generated posts; the weekly digest only reports counts from the database. Book replies are clearly labelled as AI.
 - **Strict Grounding & Verification**: Every generated quote and vocabulary word is validated character-for-character against the original Gutenberg text before database insertion. Posts with hallucinations or unverified quotes are automatically discarded by the validation engine.
 
 ---

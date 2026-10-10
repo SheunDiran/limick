@@ -195,11 +195,14 @@ DO UPDATE SET "dwellMs" = GREATEST(post_view."dwellMs", @dwell)''',
     } else {
       choice = existing.choiceIndex;
     }
+    final counts =
+        (await FeedService.quizCounts(session, {postId}))[postId] ?? {};
     return QuizResult(
       correct: choice == answer,
       correctIndex: answer,
       explanation: post.quizExplanation ?? '',
       answerCount: count,
+      counts: List.generate(options.length, (i) => counts[i] ?? 0),
     );
   }
 

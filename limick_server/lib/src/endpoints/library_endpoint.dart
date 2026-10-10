@@ -1,6 +1,6 @@
 import 'package:serverpod/serverpod.dart';
 
-import '../ai/post_generator.dart';
+import '../ai/llm.dart';
 import '../generated/protocol.dart';
 
 /// Public, live numbers about the library pipeline.
@@ -22,7 +22,7 @@ class LibraryEndpoint extends Endpoint {
             t.status.equals(BookStatus.ingesting),
       ),
       posts: await Post.db.count(session),
-      generationEnabled: PostGenerator.apiKey(session) != null,
+      generationEnabled: LlmPool.isConfigured(session),
     );
     await session.caches.local.put(
       key,

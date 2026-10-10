@@ -207,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Limick turns public-domain books from Project Gutenberg into posts with AI (Claude). '
+                      'Limick turns public-domain books from Project Gutenberg into posts with AI (Groq and Gemini models). '
                       'Quotes are checked against the original text. Old medical and legal texts are marked as historical.',
                       style: TextStyle(
                         fontSize: 12,

@@ -30,6 +30,7 @@ abstract class Reader
     int? streakDays,
     this.lastActiveDay,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   }) : bio = bio ?? '',
        dailyGoalMinutes = dailyGoalMinutes ?? 15,
@@ -37,6 +38,7 @@ abstract class Reader
        avatarHue = avatarHue ?? 210,
        streakDays = streakDays ?? 0,
        tzOffsetMinutes = tzOffsetMinutes ?? 0,
+       official = official ?? false,
        createdAt = createdAt ?? DateTime.now();
 
   factory Reader({
@@ -52,6 +54,7 @@ abstract class Reader
     int? streakDays,
     String? lastActiveDay,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   }) = _ReaderImpl;
 
@@ -73,6 +76,9 @@ abstract class Reader
       streakDays: jsonSerialization['streakDays'] as int?,
       lastActiveDay: jsonSerialization['lastActiveDay'] as String?,
       tzOffsetMinutes: jsonSerialization['tzOffsetMinutes'] as int?,
+      official: jsonSerialization['official'] == null
+          ? null
+          : _isc.BoolJsonExtension.fromJson(jsonSerialization['official']),
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _isc.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -106,6 +112,9 @@ abstract class Reader
 
   int tzOffsetMinutes;
 
+  /// The platform's own account (@limick). Not a person.
+  bool official;
+
   DateTime createdAt;
 
   /// Returns a shallow copy of this [Reader]
@@ -124,6 +133,7 @@ abstract class Reader
     int? streakDays,
     String? lastActiveDay,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   });
   @override
@@ -142,6 +152,7 @@ abstract class Reader
       'streakDays': streakDays,
       if (lastActiveDay != null) 'lastActiveDay': lastActiveDay,
       'tzOffsetMinutes': tzOffsetMinutes,
+      'official': official,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -162,6 +173,7 @@ abstract class Reader
       'streakDays': streakDays,
       if (lastActiveDay != null) 'lastActiveDay': lastActiveDay,
       'tzOffsetMinutes': tzOffsetMinutes,
+      'official': official,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -188,6 +200,7 @@ class _ReaderImpl extends Reader {
     int? streakDays,
     String? lastActiveDay,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   }) : super._(
          id: id,
@@ -202,6 +215,7 @@ class _ReaderImpl extends Reader {
          streakDays: streakDays,
          lastActiveDay: lastActiveDay,
          tzOffsetMinutes: tzOffsetMinutes,
+         official: official,
          createdAt: createdAt,
        );
 
@@ -222,6 +236,7 @@ class _ReaderImpl extends Reader {
     int? streakDays,
     Object? lastActiveDay = _Undefined,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   }) {
     return Reader(
@@ -239,6 +254,7 @@ class _ReaderImpl extends Reader {
           ? lastActiveDay
           : this.lastActiveDay,
       tzOffsetMinutes: tzOffsetMinutes ?? this.tzOffsetMinutes,
+      official: official ?? this.official,
       createdAt: createdAt ?? this.createdAt,
     );
   }

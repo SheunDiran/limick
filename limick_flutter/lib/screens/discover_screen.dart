@@ -25,6 +25,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   Topic? _topic;
   List<Book>? _books;
   List<ContinueReading> _shelf = [];
+  int? _catalogued;
   Object? _error;
   bool _loadingMore = false;
   bool _hasMore = true;
@@ -48,6 +49,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     try {
       final shelf = await client.book.continueReading();
       if (mounted) setState(() => _shelf = shelf);
+      final status = await client.library.status();
+      if (mounted) setState(() => _catalogued = status.booksCatalogued);
     } catch (_) {}
   }
 
@@ -112,7 +115,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         TextField(
                           controller: _query,
                           decoration: InputDecoration(
-                            hintText: 'Search 60,000 books by title or author',
+                            hintText: _catalogued == null
+                                ? 'Search books by title or author'
+                                : 'Search ${compactCount(_catalogued!)} books by title or author',
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon: searching
                                 ? IconButton(

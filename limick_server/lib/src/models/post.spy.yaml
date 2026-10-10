@@ -7,6 +7,9 @@ fields:
   chapterPosition: int
   kind: PostKind
   body: String
+  ### The social format the post was written in (hotTake, storytime, pov,
+  ### til, ...). Used to keep the feed varied.
+  style: String?
   quote: String?
   parts: List<String>?
   word: String?

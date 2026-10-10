@@ -30,6 +30,7 @@ abstract class Reader implements _is.TableRow<int?>, _is.ProtocolSerialization {
     int? streakDays,
     this.lastActiveDay,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   }) : bio = bio ?? '',
        dailyGoalMinutes = dailyGoalMinutes ?? 15,
@@ -37,6 +38,7 @@ abstract class Reader implements _is.TableRow<int?>, _is.ProtocolSerialization {
        avatarHue = avatarHue ?? 210,
        streakDays = streakDays ?? 0,
        tzOffsetMinutes = tzOffsetMinutes ?? 0,
+       official = official ?? false,
        createdAt = createdAt ?? DateTime.now();
 
   factory Reader({
@@ -53,6 +55,7 @@ abstract class Reader implements _is.TableRow<int?>, _is.ProtocolSerialization {
     int? streakDays,
     String? lastActiveDay,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   }) = _ReaderImpl;
 
@@ -79,6 +82,9 @@ abstract class Reader implements _is.TableRow<int?>, _is.ProtocolSerialization {
       streakDays: jsonSerialization['streakDays'] as int?,
       lastActiveDay: jsonSerialization['lastActiveDay'] as String?,
       tzOffsetMinutes: jsonSerialization['tzOffsetMinutes'] as int?,
+      official: jsonSerialization['official'] == null
+          ? null
+          : _is.BoolJsonExtension.fromJson(jsonSerialization['official']),
       createdAt: jsonSerialization['createdAt'] == null
           ? null
           : _is.DateTimeJsonExtension.fromJson(jsonSerialization['createdAt']),
@@ -116,6 +122,9 @@ abstract class Reader implements _is.TableRow<int?>, _is.ProtocolSerialization {
 
   int tzOffsetMinutes;
 
+  /// The platform's own account (@limick). Not a person.
+  bool official;
+
   DateTime createdAt;
 
   @override
@@ -138,6 +147,7 @@ abstract class Reader implements _is.TableRow<int?>, _is.ProtocolSerialization {
     int? streakDays,
     String? lastActiveDay,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   });
   @override
@@ -157,6 +167,7 @@ abstract class Reader implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'streakDays': streakDays,
       if (lastActiveDay != null) 'lastActiveDay': lastActiveDay,
       'tzOffsetMinutes': tzOffsetMinutes,
+      'official': official,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -177,6 +188,7 @@ abstract class Reader implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'streakDays': streakDays,
       if (lastActiveDay != null) 'lastActiveDay': lastActiveDay,
       'tzOffsetMinutes': tzOffsetMinutes,
+      'official': official,
       'createdAt': createdAt.toJson(),
     };
   }
@@ -226,6 +238,7 @@ class _ReaderImpl extends Reader {
     int? streakDays,
     String? lastActiveDay,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   }) : super._(
          id: id,
@@ -241,6 +254,7 @@ class _ReaderImpl extends Reader {
          streakDays: streakDays,
          lastActiveDay: lastActiveDay,
          tzOffsetMinutes: tzOffsetMinutes,
+         official: official,
          createdAt: createdAt,
        );
 
@@ -262,6 +276,7 @@ class _ReaderImpl extends Reader {
     int? streakDays,
     Object? lastActiveDay = _Undefined,
     int? tzOffsetMinutes,
+    bool? official,
     DateTime? createdAt,
   }) {
     return Reader(
@@ -280,6 +295,7 @@ class _ReaderImpl extends Reader {
           ? lastActiveDay
           : this.lastActiveDay,
       tzOffsetMinutes: tzOffsetMinutes ?? this.tzOffsetMinutes,
+      official: official ?? this.official,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -353,6 +369,11 @@ class ReaderUpdateTable extends _is.UpdateTable<ReaderTable> {
     value,
   );
 
+  _is.ColumnValue<bool, bool> official(bool value) => _is.ColumnValue(
+    table.official,
+    value,
+  );
+
   _is.ColumnValue<DateTime, DateTime> createdAt(DateTime value) =>
       _is.ColumnValue(
         table.createdAt,
@@ -417,6 +438,11 @@ class ReaderTable extends _is.Table<int?> {
       this,
       hasDefault: true,
     );
+    official = _is.ColumnBool(
+      'official',
+      this,
+      hasDefault: true,
+    );
     createdAt = _is.ColumnDateTime(
       'createdAt',
       this,
@@ -450,6 +476,9 @@ class ReaderTable extends _is.Table<int?> {
 
   late final _is.ColumnInt tzOffsetMinutes;
 
+  /// The platform's own account (@limick). Not a person.
+  late final _is.ColumnBool official;
+
   late final _is.ColumnDateTime createdAt;
 
   @override
@@ -467,6 +496,7 @@ class ReaderTable extends _is.Table<int?> {
     streakDays,
     lastActiveDay,
     tzOffsetMinutes,
+    official,
     createdAt,
   ];
 }

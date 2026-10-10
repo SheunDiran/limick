@@ -4,6 +4,7 @@ import 'package:serverpod/serverpod.dart';
 
 import '../books/library_service.dart';
 import '../generated/protocol.dart';
+import '../official/official_service.dart';
 import 'affinity.dart';
 
 /// Builds personalised feeds and decorates posts with the viewer's state.
@@ -106,6 +107,8 @@ class FeedService {
           (continueIds.contains(post.id) ? 0.45 : 0) +
           0.2 * exp(-ageHours / 72) +
           0.08 * engagement +
+          // Posts written in a social format first; older plain ones fade.
+          (post.style != null ? 0.3 : 0) +
           0.35 * _random.nextDouble();
       final isExplore = topic <= 0.05 && !follows.contains(post.bookId);
       scored.add((post: post, score: score, explore: isExplore));
@@ -121,8 +124,18 @@ class FeedService {
           .map((p) => p.post.bookId)
           .toSet();
       final lastKind = picked.isEmpty ? null : picked.last.post.kind;
+      final lastStyle = picked.isEmpty ? null : picked.last.post.style;
       int index = -1;
       if (wantExplore) index = remaining.indexWhere((c) => c.explore);
+      if (index < 0) {
+        // Vary the book, the kind of post and the social format.
+        index = remaining.indexWhere(
+          (c) =>
+              !recentBooks.contains(c.post.bookId) &&
+              c.post.kind != lastKind &&
+              (c.post.style == null || c.post.style != lastStyle),
+        );
+      }
       if (index < 0) {
         index = remaining.indexWhere(
           (c) =>
@@ -163,6 +176,23 @@ class FeedService {
       picked.map((c) => c.post).toList(),
       reasons: reasons,
     );
+
+    // One post from the official account per fresh feed session: the welcome
+    // first, then today's book and word, then tips.
+    if (excludeIds.isEmpty) {
+      final official = await OfficialService.nextFor(session, profileId);
+      if (official != null) {
+        final book = official.bookId == null
+            ? null
+            : await Book.db.findById(session, official.bookId!);
+        items.insert(
+          official.kind == OfficialPostKind.welcome
+              ? 0
+              : (items.length < 2 ? items.length : 2),
+          FeedItem(kind: FeedItemKind.official, official: official, book: book),
+        );
+      }
+    }
 
     // Slip a word review into the feed when one is due.
     final due = await SavedWord.db.findFirstRow(
@@ -235,6 +265,23 @@ class FeedService {
     );
   }
 
+  /// Real answer counts per option for the given quiz posts.
+  static Future<Map<int, Map<int, int>>> quizCounts(
+    Session session,
+    Set<int> postIds,
+  ) async {
+    if (postIds.isEmpty) return {};
+    final rows = await session.db.unsafeQuery(
+      'SELECT "postId", "choiceIndex", COUNT(*) FROM quiz_answer '
+      'WHERE "postId" IN (${postIds.join(',')}) GROUP BY 1, 2',
+    );
+    final result = <int, Map<int, int>>{};
+    for (final r in rows) {
+      (result[r[0] as int] ??= {})[r[1] as int] = r[2] as int;
+    }
+    return result;
+  }
+
   /// Attaches the book, chapter title and the viewer's own state to posts.
   static Future<List<FeedItem>> decorate(
     Session session,
@@ -276,6 +323,10 @@ class FeedService {
       ))
         a.postId: a,
     };
+    final counts = await quizCounts(
+      session,
+      answers.keys.toSet(),
+    );
     final votes = {
       for (final v in await DebateVote.db.find(
         session,
@@ -307,6 +358,12 @@ class FeedService {
           followingBook: follows.contains(post.bookId),
           quizChoice: answer?.choiceIndex,
           quizCorrectIndex: answer == null ? null : post.quizAnswerIndex,
+          quizCounts: answer == null
+              ? null
+              : List.generate(
+                  post.quizOptions?.length ?? 0,
+                  (i) => counts[post.id]?[i] ?? 0,
+                ),
           // Answers and the two sides of a debate are revealed after the
           // reader has committed to a choice.
           quizExplanation: answer != null || votes.containsKey(post.id)

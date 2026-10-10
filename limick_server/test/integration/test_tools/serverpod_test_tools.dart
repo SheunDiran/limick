@@ -41,6 +41,9 @@ import 'package:limick_server/src/generated/dto_room_message_view.dart'
 import 'package:limick_server/src/generated/dto_room_view.dart' as _ieqa76y5;
 import 'package:limick_server/src/generated/dto_view_signal.dart' as _ik2oo8gm;
 import 'package:limick_server/src/generated/future_calls.dart' as _impq36kq;
+import 'package:limick_server/src/generated/future_calls_generated_models/book_reply_future_call_reply_model.dart'
+    as _iwzg5vtc;
+import 'package:limick_server/src/generated/notification.dart' as _igqfg1a1;
 import 'package:limick_server/src/generated/reader.dart' as _iufpx6qi;
 import 'package:limick_server/src/generated/reading_progress.dart' as _i0o1x9lw;
 import 'package:limick_server/src/generated/saved_word.dart' as _i351mgoy;
@@ -194,6 +197,8 @@ class TestEndpoints {
 
   late final _ModerationEndpoint moderation;
 
+  late final _NotificationEndpoint notification;
+
   late final _ProfileEndpoint profile;
 
   late final _RoomEndpoint room;
@@ -238,6 +243,10 @@ class _InternalTestEndpoints extends TestEndpoints
       endpoints,
       serializationManager,
     );
+    notification = _NotificationEndpoint(
+      endpoints,
+      serializationManager,
+    );
     profile = _ProfileEndpoint(
       endpoints,
       serializationManager,
@@ -258,6 +267,8 @@ class _InternalTestEndpoints extends TestEndpoints
 }
 
 class _FutureCalls {
+  late final bookReply = _BookReplyFutureCall();
+
   late final library = _LibraryFutureCall();
 }
 
@@ -1561,6 +1572,104 @@ class _ModerationEndpoint {
   }
 }
 
+class _NotificationEndpoint {
+  _NotificationEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<List<_igqfg1a1.ReaderNotification>> list(
+    _ist.TestSessionBuilder sessionBuilder,
+    int? beforeId,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'notification',
+            method: 'list',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'notification',
+          methodName: 'list',
+          parameters: _ist.testObjectToJson({'beforeId': beforeId}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_igqfg1a1.ReaderNotification>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<int> unreadCount(_ist.TestSessionBuilder sessionBuilder) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'notification',
+            method: 'unreadCount',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'notification',
+          methodName: 'unreadCount',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<int>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<void> markAllRead(_ist.TestSessionBuilder sessionBuilder) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'notification',
+            method: 'markAllRead',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'notification',
+          methodName: 'markAllRead',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
 class _ProfileEndpoint {
   _ProfileEndpoint(
     this._endpointDispatch,
@@ -2397,6 +2506,25 @@ class _WordEndpoint {
         await _localUniqueSession.close();
       }
     });
+  }
+}
+
+class _BookReplyFutureCall {
+  Future<void> reply(
+    _ist.TestSessionBuilder sessionBuilder,
+    int commentId,
+  ) async {
+    var object = _iwzg5vtc.BookReplyFutureCallReplyModel(commentId: commentId);
+    var _localUniqueSession =
+        (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild();
+    try {
+      await _impq36kq.BookReplyReplyFutureCall().invoke(
+        _localUniqueSession,
+        object,
+      );
+    } finally {
+      await _localUniqueSession.close();
+    }
   }
 }
 

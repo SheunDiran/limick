@@ -14,6 +14,8 @@ fields:
   streakDays: int, default=0
   lastActiveDay: String?
   tzOffsetMinutes: int, default=0
+  ### The platform's own account (@limick). Not a person.
+  official: bool, default=false
   createdAt: DateTime, default=now
 indexes:
   reader_auth_idx:

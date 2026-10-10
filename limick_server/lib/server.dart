@@ -6,6 +6,8 @@ import 'package:serverpod_cloud_storage/serverpod_cloud_storage.dart';
 
 import 'src/books/library_service.dart';
 import 'src/cache_busting.dart';
+import 'src/official/demo_accounts.dart';
+import 'src/official/official_service.dart';
 import 'src/generated/serverpod.dart';
 import 'src/web/routes/app_config_route.dart';
 import 'src/web/routes/post_share_route.dart';
@@ -116,6 +118,8 @@ Future<void> _startLibraryPipeline(Serverpod pod) async {
   final session = await pod.createSession();
   try {
     await LibraryService.seed(session);
+    await OfficialService.seed(session);
+    await DemoAccounts.ensure(session);
   } finally {
     await session.close();
   }

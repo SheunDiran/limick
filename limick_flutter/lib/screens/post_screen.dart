@@ -6,10 +6,9 @@ import 'package:limick_client/limick_client.dart';
 import '../client.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
+import '../widgets/comment_tile.dart';
 import '../widgets/common.dart';
-import '../widgets/covers.dart';
 import '../widgets/post_card.dart';
-import 'reader_profile_screen.dart';
 
 /// A post with its comment thread. New comments, likes and deletions from
 /// other readers arrive live over a Serverpod stream.
@@ -33,6 +32,10 @@ class _PostScreenState extends State<PostScreen> {
   CommentView? _replyTo;
   bool _sending = false;
 
+  /// True while the book is writing a reply to the reader's question.
+  bool _bookTyping = false;
+  Timer? _typingTimeout;
+
   int get _postId => _item.post!.id!;
 
   @override
@@ -46,6 +49,7 @@ class _PostScreenState extends State<PostScreen> {
   void dispose() {
     _live?.cancel();
     _reconnect?.cancel();
+    _typingTimeout?.cancel();
     _input.dispose();
     _focus.dispose();
     super.dispose();
@@ -94,6 +98,7 @@ class _PostScreenState extends State<PostScreen> {
       switch (event.type) {
         case LiveEventType.added:
           final c = event.comment!;
+          if (c.author.bookId != null) _bookTyping = false;
           if (comments.any((x) => x.comment.id == c.comment.id)) return;
           _insert(c);
           _item = _item.copyWith(
@@ -154,6 +159,26 @@ class _PostScreenState extends State<PostScreen> {
         );
       });
       widget.onChanged?.call(_item);
+      // Mirrors the server rule: questions and mentions get an answer from
+      // the book. Show that it's on its way.
+      final book = _item.book;
+      final asksBook =
+          text.contains('?') ||
+          (book != null &&
+              text.toLowerCase().contains('@${book.handle.toLowerCase()}')) ||
+          (c.comment.parentId != null &&
+              (_comments ?? []).any(
+                (x) =>
+                    x.comment.id == c.comment.parentId &&
+                    x.author.bookId != null,
+              ));
+      if (asksBook) {
+        setState(() => _bookTyping = true);
+        _typingTimeout?.cancel();
+        _typingTimeout = Timer(const Duration(seconds: 40), () {
+          if (mounted) setState(() => _bookTyping = false);
+        });
+      }
     } catch (e) {
       if (mounted) showError(context, e);
     } finally {
@@ -186,35 +211,9 @@ class _PostScreenState extends State<PostScreen> {
     final mine = c.author.id == app.reader?.id;
     final action = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.reply),
-              title: const Text('Reply'),
-              onTap: () => Navigator.pop(context, 'reply'),
-            ),
-            if (mine)
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('Delete'),
-                onTap: () => Navigator.pop(context, 'delete'),
-              )
-            else ...[
-              ListTile(
-                leading: const Icon(Icons.flag_outlined),
-                title: const Text('Report'),
-                onTap: () => Navigator.pop(context, 'report'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.block),
-                title: Text('Block @${c.author.handle}'),
-                onTap: () => Navigator.pop(context, 'block'),
-              ),
-            ],
-          ],
-        ),
+      builder: (context) => CommentActionSheet(
+        view: c,
+        isMine: mine,
       ),
     );
     if (!mounted || action == null) return;
@@ -282,11 +281,32 @@ class _PostScreenState extends State<PostScreen> {
                     )
                   else
                     for (final c in _comments!)
-                      _CommentTile(
+                      CommentTile(
                         view: c,
                         onLike: () => _like(c),
                         onMenu: () => _menu(c),
                       ),
+                  if (_bookTyping && _item.book != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.6,
+                              color: p.accent,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            '@${_item.book!.handle} is looking through the text…',
+                            style: TextStyle(color: p.muted, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -344,112 +364,13 @@ class _PostScreenState extends State<PostScreen> {
               ),
               const SizedBox(width: 6),
               IconButton.filled(
+                tooltip: 'Send comment',
                 onPressed: _sending ? null : _send,
                 icon: const Icon(Icons.arrow_upward_rounded),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CommentTile extends StatelessWidget {
-  final CommentView view;
-  final VoidCallback onLike;
-  final VoidCallback onMenu;
-  const _CommentTile({
-    required this.view,
-    required this.onLike,
-    required this.onMenu,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final c = view.comment;
-    final reply = c.parentId != null;
-    return InkWell(
-      onLongPress: onMenu,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(reply ? 64 : 20, 14, 8, 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      ReaderProfileScreen(handle: view.author.handle),
-                ),
-              ),
-              child: ReaderAvatar(
-                name: view.author.displayName,
-                hue: view.author.avatarHue,
-                size: reply ? 28 : 34,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: view.author.displayName,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        TextSpan(
-                          text:
-                              '  @${view.author.handle} · ${timeAgo(c.createdAt)}',
-                          style: TextStyle(color: p.faint),
-                        ),
-                      ],
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13.5),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    c.deleted ? '[deleted]' : c.body,
-                    style: TextStyle(
-                      height: 1.45,
-                      color: c.deleted ? p.faint : p.ink,
-                      fontStyle: c.deleted ? FontStyle.italic : null,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              children: [
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  onPressed: c.deleted ? null : onLike,
-                  icon: Icon(
-                    view.likedByMe ? Icons.favorite : Icons.favorite_border,
-                    size: 17,
-                    color: view.likedByMe ? p.accent : p.faint,
-                  ),
-                ),
-                if (c.likeCount > 0)
-                  Text(
-                    compactCount(c.likeCount),
-                    style: TextStyle(fontSize: 11.5, color: p.faint),
-                  ),
-              ],
-            ),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              onPressed: onMenu,
-              icon: Icon(Icons.more_horiz, size: 18, color: p.faint),
-            ),
-          ],
-        ),
       ),
     );
   }

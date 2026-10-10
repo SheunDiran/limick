@@ -3,6 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:limick_client/limick_client.dart';
 import 'package:limick_flutter/client.dart';
 import 'package:limick_flutter/theme.dart';
+import 'package:limick_flutter/widgets/comment_tile.dart';
+import 'package:limick_flutter/widgets/covers.dart';
+import 'package:limick_flutter/widgets/official_card.dart';
 import 'package:limick_flutter/widgets/post_card.dart';
 
 void main() {
@@ -144,7 +147,7 @@ void main() {
       await tester.pumpWidget(wrapWithTheme(PostCard(item: item)));
       await tester.pump();
 
-      expect(find.text('WORD'), findsOneWidget);
+      expect(find.textContaining('perspicuous'), findsWidgets);
       expect(find.textContaining('adjective'), findsOneWidget);
       expect(
         find.text('Clearly expressed and easily understood.'),
@@ -173,9 +176,9 @@ void main() {
         find.text('How variation develops over successive generations:'),
         findsOneWidget,
       );
-      expect(find.textContaining('Show thread'), findsOneWidget);
+      expect(find.textContaining('Show this thread'), findsOneWidget);
 
-      await tester.tap(find.textContaining('Show thread'));
+      await tester.tap(find.textContaining('Show this thread'));
       await tester.pumpAndSettle();
 
       expect(
@@ -208,16 +211,15 @@ void main() {
       await tester.pumpWidget(wrapWithTheme(PostCard(item: item)));
       await tester.pump();
 
-      expect(find.text('QUIZ'), findsOneWidget);
       expect(
         find.text('What primarily drives divergence of character?'),
         findsOneWidget,
       );
       expect(find.text('Natural selection'), findsOneWidget);
       expect(find.text('Pure coincidence'), findsOneWidget);
-      expect(find.text('Correct.'), findsOneWidget);
+      expect(find.textContaining('Got it.'), findsOneWidget);
       expect(
-        find.text('Selection acts continuously on minute variations.'),
+        find.textContaining('Selection acts continuously on minute variations.'),
         findsOneWidget,
       );
     });
@@ -237,10 +239,9 @@ void main() {
       await tester.pumpWidget(wrapWithTheme(PostCard(item: item)));
       await tester.pump();
 
-      expect(find.text('DEBATE'), findsOneWidget);
       expect(find.text('Agree'), findsOneWidget);
       expect(find.text('Disagree'), findsOneWidget);
-      expect(find.textContaining('% agree'), findsOneWidget);
+      expect(find.textContaining('votes'), findsOneWidget);
     });
   });
 
@@ -276,8 +277,184 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('WORD'), findsOneWidget);
+      expect(find.text('Save to word bank'), findsOneWidget);
       expect(find.textContaining('unambiguous'), findsOneWidget);
     });
+  });
+
+  group('OfficialCard rendering and interactions', () {
+    testWidgets('renders title, body, badge and book of the day cover', (
+      tester,
+    ) async {
+      final officialPost = OfficialPost(
+        id: 1,
+        kind: OfficialPostKind.bookOfTheDay,
+        title: 'Book of the Day: Origin of Species',
+        body: 'The foundational text of evolutionary biology.',
+        action: 'openBook',
+        actionLabel: 'Read chapter',
+        bookId: testBook.id,
+        createdAt: DateTime.now(),
+      );
+      final item = FeedItem(
+        kind: FeedItemKind.official,
+        official: officialPost,
+        book: testBook,
+      );
+
+      await tester.pumpWidget(wrapWithTheme(OfficialCard(item: item)));
+      await tester.pump();
+
+      expect(find.text('Book of the Day: Origin of Species'), findsOneWidget);
+      expect(
+        find.text('The foundational text of evolutionary biology.'),
+        findsOneWidget,
+      );
+      expect(find.byType(OfficialBadge), findsOneWidget);
+      expect(find.byType(BookCover), findsOneWidget);
+      expect(find.text('Read chapter'), findsOneWidget);
+    });
+
+    testWidgets(
+      'tapping Start a break button opens bottom sheet with Take a break',
+      (
+        tester,
+      ) async {
+        final tipPost = OfficialPost(
+          id: 2,
+          kind: OfficialPostKind.tip,
+          title: 'Time for a study break',
+          body: 'Recharge your focus with a short interval.',
+          action: 'startBreak',
+          actionLabel: 'Start a break',
+          createdAt: DateTime.now(),
+        );
+        final item = FeedItem(
+          kind: FeedItemKind.official,
+          official: tipPost,
+        );
+
+        await tester.pumpWidget(wrapWithTheme(OfficialCard(item: item)));
+        await tester.pump();
+
+        expect(find.text('Start a break'), findsOneWidget);
+        await tester.tap(find.text('Start a break'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Take a break'), findsOneWidget);
+      },
+    );
+  });
+
+  group('CommentTile and CommentActionSheet UI', () {
+    testWidgets('Comment tile with book author shows AI · from the text tag', (
+      tester,
+    ) async {
+      final bookAuthor = Author(
+        id: 99,
+        handle: 'OriginOfSpecies',
+        displayName: 'On the Origin of Species',
+        avatarHue: 120,
+        official: true,
+        bookId: 1,
+      );
+      final comment = Comment(
+        id: 1,
+        postId: 101,
+        profileId: 99,
+        body: 'I explore how variations arise under natural selection.',
+        asBookId: 1,
+        createdAt: DateTime.now(),
+      );
+      final view = CommentView(comment: comment, author: bookAuthor);
+
+      await tester.pumpWidget(
+        wrapWithTheme(
+          CommentTile(
+            view: view,
+            onLike: () {},
+            onMenu: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('AI · from the text'), findsOneWidget);
+      expect(
+        find.text('I explore how variations arise under natural selection.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'CommentActionSheet for book author has no Block option, while regular author does',
+      (
+        tester,
+      ) async {
+        final bookAuthor = Author(
+          id: 99,
+          handle: 'OriginOfSpecies',
+          displayName: 'On the Origin of Species',
+          avatarHue: 120,
+          official: true,
+          bookId: 1,
+        );
+        final bookComment = Comment(
+          id: 1,
+          postId: 101,
+          profileId: 99,
+          body: 'An answer from the book.',
+          asBookId: 1,
+          createdAt: DateTime.now(),
+        );
+        final bookView = CommentView(comment: bookComment, author: bookAuthor);
+
+        await tester.pumpWidget(
+          wrapWithTheme(
+            CommentActionSheet(
+              view: bookView,
+              isMine: false,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Reply'), findsOneWidget);
+        expect(find.text('Report'), findsOneWidget);
+        expect(find.textContaining('Block'), findsNothing);
+
+        // Now for a regular human author:
+        final humanAuthor = Author(
+          id: 42,
+          handle: 'charlie',
+          displayName: 'Charlie',
+          avatarHue: 200,
+          official: false,
+        );
+        final humanComment = Comment(
+          id: 2,
+          postId: 101,
+          profileId: 42,
+          body: 'A thoughtful comment from a reader.',
+          createdAt: DateTime.now(),
+        );
+        final humanView = CommentView(
+          comment: humanComment,
+          author: humanAuthor,
+        );
+
+        await tester.pumpWidget(
+          wrapWithTheme(
+            CommentActionSheet(
+              view: humanView,
+              isMine: false,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Block @charlie'), findsOneWidget);
+      },
+    );
   });
 }

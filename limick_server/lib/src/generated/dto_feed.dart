@@ -14,6 +14,7 @@ import 'package:limick_server/src/generated/protocol.dart' as _i8uqouhs;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'book.dart' as _ik00prxe;
 import 'feed_item_kind.dart' as _i5lurufd;
+import 'official_post.dart' as _i2bhchuw;
 import 'post.dart' as _iwx4avst;
 import 'saved_word.dart' as _itxlv1gb;
 
@@ -31,9 +32,11 @@ abstract class FeedItem
     this.quizChoice,
     this.quizCorrectIndex,
     this.quizExplanation,
+    this.quizCounts,
     this.debateVote,
     this.reason,
     this.review,
+    this.official,
   }) : liked = liked ?? false,
        saved = saved ?? false,
        followingBook = followingBook ?? false;
@@ -49,9 +52,11 @@ abstract class FeedItem
     int? quizChoice,
     int? quizCorrectIndex,
     String? quizExplanation,
+    List<int>? quizCounts,
     bool? debateVote,
     String? reason,
     _itxlv1gb.SavedWord? review,
+    _i2bhchuw.OfficialPost? official,
   }) = _FeedItemImpl;
 
   factory FeedItem.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -82,6 +87,11 @@ abstract class FeedItem
       quizChoice: jsonSerialization['quizChoice'] as int?,
       quizCorrectIndex: jsonSerialization['quizCorrectIndex'] as int?,
       quizExplanation: jsonSerialization['quizExplanation'] as String?,
+      quizCounts: jsonSerialization['quizCounts'] == null
+          ? null
+          : _i8uqouhs.Protocol().deserialize<List<int>>(
+              jsonSerialization['quizCounts'],
+            ),
       debateVote: jsonSerialization['debateVote'] == null
           ? null
           : _is.BoolJsonExtension.fromJson(jsonSerialization['debateVote']),
@@ -90,6 +100,11 @@ abstract class FeedItem
           ? null
           : _i8uqouhs.Protocol().deserialize<_itxlv1gb.SavedWord>(
               jsonSerialization['review'],
+            ),
+      official: jsonSerialization['official'] == null
+          ? null
+          : _i8uqouhs.Protocol().deserialize<_i2bhchuw.OfficialPost>(
+              jsonSerialization['official'],
             ),
     );
   }
@@ -114,11 +129,16 @@ abstract class FeedItem
 
   String? quizExplanation;
 
+  /// Real answer counts per option, revealed after the reader answers.
+  List<int>? quizCounts;
+
   bool? debateVote;
 
   String? reason;
 
   _itxlv1gb.SavedWord? review;
+
+  _i2bhchuw.OfficialPost? official;
 
   /// Returns a shallow copy of this [FeedItem]
   /// with some or all fields replaced by the given arguments.
@@ -134,9 +154,11 @@ abstract class FeedItem
     int? quizChoice,
     int? quizCorrectIndex,
     String? quizExplanation,
+    List<int>? quizCounts,
     bool? debateVote,
     String? reason,
     _itxlv1gb.SavedWord? review,
+    _i2bhchuw.OfficialPost? official,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -152,9 +174,11 @@ abstract class FeedItem
       if (quizChoice != null) 'quizChoice': quizChoice,
       if (quizCorrectIndex != null) 'quizCorrectIndex': quizCorrectIndex,
       if (quizExplanation != null) 'quizExplanation': quizExplanation,
+      if (quizCounts != null) 'quizCounts': quizCounts?.toJson(),
       if (debateVote != null) 'debateVote': debateVote,
       if (reason != null) 'reason': reason,
       if (review != null) 'review': review?.toJson(),
+      if (official != null) 'official': official?.toJson(),
     };
   }
 
@@ -172,9 +196,11 @@ abstract class FeedItem
       if (quizChoice != null) 'quizChoice': quizChoice,
       if (quizCorrectIndex != null) 'quizCorrectIndex': quizCorrectIndex,
       if (quizExplanation != null) 'quizExplanation': quizExplanation,
+      if (quizCounts != null) 'quizCounts': quizCounts?.toJson(),
       if (debateVote != null) 'debateVote': debateVote,
       if (reason != null) 'reason': reason,
       if (review != null) 'review': review?.toJsonForProtocol(),
+      if (official != null) 'official': official?.toJsonForProtocol(),
     };
   }
 
@@ -198,9 +224,11 @@ class _FeedItemImpl extends FeedItem {
     int? quizChoice,
     int? quizCorrectIndex,
     String? quizExplanation,
+    List<int>? quizCounts,
     bool? debateVote,
     String? reason,
     _itxlv1gb.SavedWord? review,
+    _i2bhchuw.OfficialPost? official,
   }) : super._(
          kind: kind,
          post: post,
@@ -212,9 +240,11 @@ class _FeedItemImpl extends FeedItem {
          quizChoice: quizChoice,
          quizCorrectIndex: quizCorrectIndex,
          quizExplanation: quizExplanation,
+         quizCounts: quizCounts,
          debateVote: debateVote,
          reason: reason,
          review: review,
+         official: official,
        );
 
   /// Returns a shallow copy of this [FeedItem]
@@ -232,9 +262,11 @@ class _FeedItemImpl extends FeedItem {
     Object? quizChoice = _Undefined,
     Object? quizCorrectIndex = _Undefined,
     Object? quizExplanation = _Undefined,
+    Object? quizCounts = _Undefined,
     Object? debateVote = _Undefined,
     Object? reason = _Undefined,
     Object? review = _Undefined,
+    Object? official = _Undefined,
   }) {
     return FeedItem(
       kind: kind ?? this.kind,
@@ -251,9 +283,15 @@ class _FeedItemImpl extends FeedItem {
       quizExplanation: quizExplanation is String?
           ? quizExplanation
           : this.quizExplanation,
+      quizCounts: quizCounts is List<int>?
+          ? quizCounts
+          : this.quizCounts?.map((e0) => e0).toList(),
       debateVote: debateVote is bool? ? debateVote : this.debateVote,
       reason: reason is String? ? reason : this.reason,
       review: review is _itxlv1gb.SavedWord? ? review : this.review?.copyWith(),
+      official: official is _i2bhchuw.OfficialPost?
+          ? official
+          : this.official?.copyWith(),
     );
   }
 }

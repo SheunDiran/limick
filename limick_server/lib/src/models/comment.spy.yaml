@@ -5,6 +5,9 @@ fields:
   profileId: int, relation(parent=reader, onDelete=Cascade)
   parentId: int?
   body: String
+  ### Set when a book account replied (AI, grounded in the passage). The
+  ### comment is stored under the official account.
+  asBookId: int?
   likeCount: int, default=0
   replyCount: int, default=0
   deleted: bool, default=false

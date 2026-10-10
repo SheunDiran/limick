@@ -53,11 +53,16 @@ class ProfileEndpoint extends Endpoint {
       where: (t) =>
           t.profileId.equals(profile!.id!) & (t.dueAt <= DateTime.now()),
     );
+    final unreadNotifications = await ReaderNotification.db.count(
+      session,
+      where: (t) => t.profileId.equals(profile!.id!) & t.read.equals(false),
+    );
     return Me(
       profile: profile,
       suggestedHandle: profile.handle,
       activeBreak: activeBreak,
       dueWords: dueWords,
+      unreadNotifications: unreadNotifications,
     );
   }
 
@@ -75,7 +80,22 @@ class ProfileEndpoint extends Endpoint {
   /// Creates the profile and seeds the recommendation engine from the user's
   /// field, interests and favourite books.
   Future<Me> completeOnboarding(Session session, OnboardingInput input) async {
-    final authUserId = session.authenticated!.authUserId;
+    final profile = await applyOnboarding(
+      session,
+      session.authenticated!.authUserId,
+      input,
+    );
+    return me(session, profile.tzOffsetMinutes);
+  }
+
+  /// Creates or updates a reader's profile and seeds the recommendation
+  /// engine. Shared by onboarding and by the demo-account seeder, so both
+  /// go through exactly the same path.
+  static Future<Reader> applyOnboarding(
+    Session session,
+    UuidValue authUserId,
+    OnboardingInput input,
+  ) async {
     final handle = input.handle.trim().toLowerCase();
     final displayName = cleanUserText(input.displayName, maxLength: 40);
     final field = input.field == null
@@ -92,7 +112,11 @@ class ProfileEndpoint extends Endpoint {
         code: 'invalid_handle',
       );
     }
-    if (!await isHandleAvailable(session, handle)) {
+    final owner = await Reader.db.findFirstRow(
+      session,
+      where: (t) => t.handle.equals(handle),
+    );
+    if (owner != null && owner.authUserId != authUserId) {
       throw AppException(message: '@$handle is taken.', code: 'handle_taken');
     }
     if (interests.length < 3) {
@@ -189,7 +213,7 @@ class ProfileEndpoint extends Endpoint {
         );
       }
     }
-    return me(session, profile.tzOffsetMinutes);
+    return profile;
   }
 
   static Future<void> _follow(Session session, int profileId, Book book) async {

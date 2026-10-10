@@ -8,6 +8,7 @@ import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/covers.dart';
+import '../widgets/official_card.dart';
 import 'reader_profile_screen.dart';
 
 /// A live public room, powered by a Serverpod stream with presence.
@@ -197,11 +198,12 @@ class _RoomScreenState extends State<RoomScreen> {
                 title: const Text('Report'),
                 onTap: () => Navigator.pop(context, 'report'),
               ),
-              ListTile(
-                leading: const Icon(Icons.block),
-                title: Text('Block @${m.author.handle}'),
-                onTap: () => Navigator.pop(context, 'block'),
-              ),
+              if (!m.author.official)
+                ListTile(
+                  leading: const Icon(Icons.block),
+                  title: Text('Block @${m.author.handle}'),
+                  onTap: () => Navigator.pop(context, 'block'),
+                ),
             ],
           ],
         ),
@@ -357,6 +359,7 @@ class _RoomScreenState extends State<RoomScreen> {
                   ),
                   const SizedBox(width: 6),
                   IconButton.filled(
+                    tooltip: 'Send message',
                     onPressed: _sending ? null : _send,
                     icon: const Icon(Icons.arrow_upward_rounded),
                   ),
@@ -395,6 +398,8 @@ class _Bubble extends StatelessWidget {
               width: 40,
               child: grouped
                   ? null
+                  : message.author.official
+                  ? const LimickMark(size: 32)
                   : ReaderAvatar(
                       name: message.author.displayName,
                       hue: message.author.avatarHue,
@@ -416,6 +421,14 @@ class _Bubble extends StatelessWidget {
                               color: mine ? p.accent : p.ink,
                             ),
                           ),
+                          if (message.author.official)
+                            const WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 4),
+                                child: OfficialBadge(size: 14),
+                              ),
+                            ),
                           TextSpan(
                             text: '  ${timeAgo(message.message.createdAt)}',
                             style: TextStyle(color: p.faint, fontSize: 12),

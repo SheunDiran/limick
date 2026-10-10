@@ -1,11 +1,11 @@
 {
-    "name": "limick_flutter",
-    "short_name": "limick_flutter",
+    "name": "Limick",
+    "short_name": "Limick",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0D0D0F",
+    "theme_color": "#0D0D0F",
+    "description": "Keep scrolling. Keep learning. A social feed where every post comes from a real public-domain book.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

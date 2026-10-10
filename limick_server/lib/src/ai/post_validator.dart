@@ -1,5 +1,6 @@
 import '../generated/protocol.dart';
 import '../util/text.dart';
+import 'post_formats.dart';
 
 /// Context representing the readable slice of a book that was fed to the model.
 class PassageContext {
@@ -28,17 +29,27 @@ class PassageContext {
 List<Post> validateGeneratedPosts(
   Map<String, dynamic> response,
   Book book,
-  PassageContext passage,
-) {
+  PassageContext passage, {
+  List<String>? rejections,
+}) {
+  void reject(Object? kind, String why) => rejections?.add('$kind: $why');
+
   final raw = (response['posts'] as List?) ?? const [];
   final posts = <Post>[];
   final seenKinds = <PostKind>{};
 
   for (final item in raw.whereType<Map<String, dynamic>>()) {
     final kind = PostKind.values.asNameMap()[item['kind']];
-    if (kind == null || seenKinds.contains(kind)) continue;
-    final body = clipText(item['body'], 600);
-    if (body == null || body.length < 20) continue;
+    if (kind == null || seenKinds.contains(kind)) {
+      reject(item['kind'], 'unknown or duplicate kind');
+      continue;
+    }
+    final body = clipText(item['body'], 700);
+    final minBody = kind == PostKind.quote ? 8 : 20;
+    if (body == null || body.length < minBody) {
+      reject(kind.name, 'body too short');
+      continue;
+    }
 
     var start = passage.start;
     var end = passage.end;
@@ -47,7 +58,10 @@ List<Post> validateGeneratedPosts(
       final found = findQuote(passage.text, quote);
       if (found == null) {
         // Never publish a quote that is not in the book.
-        if (kind == PostKind.quote || kind == PostKind.word) continue;
+        if (kind == PostKind.quote || kind == PostKind.word) {
+          reject(kind.name, 'quote not in passage: "$quote"');
+          continue;
+        }
         quote = null;
       } else {
         quote = passage.text
@@ -59,13 +73,33 @@ List<Post> validateGeneratedPosts(
     }
     if (kind == PostKind.quote && quote == null) continue;
 
+    // Every other post must point at the sentence that proves it. If that
+    // sentence isn't really in the passage, the post is not published.
+    if (kind != PostKind.quote && kind != PostKind.word) {
+      final evidence = clipText(item['evidence'], 600);
+      final found = evidence == null
+          ? null
+          : findEvidence(passage.text, evidence);
+      if (found == null) {
+        reject(kind.name, 'evidence not in passage: "$evidence"');
+        continue;
+      }
+      if (quote == null) {
+        start = passage.start + found.start;
+        end = passage.start + found.end;
+      }
+    }
+
     String? word, definition, partOfSpeech;
     if (kind == PostKind.word) {
       word = clipText(item['word'], 40);
       definition = clipText(item['definition'], 240);
       partOfSpeech = clipText(item['partOfSpeech'], 30);
       if (word == null || definition == null) continue;
-      if (!containsWord(passage.text, word)) continue;
+      if (!containsWord(passage.text, word)) {
+        reject(kind.name, 'word "$word" not in passage');
+        continue;
+      }
     }
 
     List<String>? parts;
@@ -75,7 +109,10 @@ List<Post> validateGeneratedPosts(
           .whereType<String>()
           .take(4)
           .toList();
-      if (parts.length < 2) continue;
+      if (parts.length < 2) {
+        reject(kind.name, 'thread needs 2+ parts');
+        continue;
+      }
     }
 
     List<String>? options;
@@ -90,9 +127,13 @@ List<Post> validateGeneratedPosts(
       answer = item['answerIndex'] is int ? item['answerIndex'] as int : -1;
       explanation = clipText(item['explanation'], 400);
       if (options.length < 3 || answer < 0 || answer >= options.length) {
+        reject(kind.name, 'bad options or answer');
         continue;
       }
-      if (options.toSet().length != options.length) continue;
+      if (options.toSet().length != options.length) {
+        reject(kind.name, 'duplicate options');
+        continue;
+      }
     }
     if (kind == PostKind.debate) {
       explanation = clipText(item['explanation'], 400);
@@ -107,6 +148,7 @@ List<Post> validateGeneratedPosts(
         chapterPosition: passage.chapter.position,
         kind: kind,
         body: body,
+        style: formatById(item['style'] as String?)?.id,
         quote: quote,
         parts: parts,
         word: word,
@@ -123,6 +165,31 @@ List<Post> validateGeneratedPosts(
     );
   }
   return posts;
+}
+
+/// Finds the evidence for a post in the passage. Models sometimes join two
+/// sentences with "..." or trim the ends, so if the whole string isn't
+/// present, the longest fragment of 30+ characters that is present counts.
+/// Anything shorter is not evidence.
+final _edgeQuotes = RegExp(
+  '^["\u201C\u201D\'\u2018\u2019]+|["\u201C\u201D\'\u2018\u2019]+\$',
+);
+
+({int start, int end})? findEvidence(String passage, String evidence) {
+  final whole = findQuote(passage, evidence);
+  if (whole != null) return whole;
+  final fragments =
+      evidence
+          .split(RegExp(r'\.\.\.|…|(?<=[.!?;:])\s+'))
+          .map((f) => f.trim().replaceAll(_edgeQuotes, ''))
+          .where((f) => f.length >= 30)
+          .toList()
+        ..sort((a, b) => b.length.compareTo(a.length));
+  for (final fragment in fragments) {
+    final found = findQuote(passage, fragment);
+    if (found != null) return found;
+  }
+  return null;
 }
 
 /// Helper that clips string values to [max] characters and trims whitespace.

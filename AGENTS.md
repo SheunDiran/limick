@@ -11,15 +11,35 @@ from. Built for the Serverpod hackathon (deadline 14 Oct 2026); planning notes l
   (`library-tick`, every 20 s, registered in `lib/server.dart`) ingests queued books (download with HTTP range
   resume → strip the Gutenberg licence → split into chapters in `gutenberg.dart`), imports the full Gutenberg
   catalogue once (~60k English titles), and generates posts.
-- **Post generation** (`lib/src/ai/`): `PostGenerator` reads the next ~750-word passage of a book, asks Claude
-  Haiku 4.5 (`claude_client.dart`, raw HTTP, JSON-schema structured output) for three posts of rotating kinds
-  (insight, quote, word, thread, quiz, debate), and validates them: quotes and vocabulary must appear verbatim in
-  the passage (`util/text.dart` `findQuote`). The API key is `anthropicApiKey` in `config/passwords.yaml`
-  (`shared:`) or env `SERVERPOD_PASSWORD_anthropicApiKey`; without it generation pauses with a warning.
+- **Post generation** (`lib/src/ai/`): `PostGenerator` reads the next ~750-word passage of a book, asks an LLM
+  for three posts, and validates them in `post_validator.dart`. Posts are written in social formats from
+  `post_formats.dart` (hot take, storytime, POV, TIL, "nobody talks about", then-vs-now, relatable, quote reaction,
+  vocab, cliffhanger and listicle threads, poll-style quiz, ragebait and hot-debate polls), picked per request by
+  topic (`pickFormats`), with the voice guide and system prompt in the same file. Grounding is enforced in code:
+  quotes and words must appear verbatim, and every other post must carry an `evidence` sentence that
+  `findEvidence` finds in the passage, or it is rejected (the evidence also becomes the reader highlight).
+  Rejection reasons are logged as `Rejected for @Book: ...`. Front and back matter (prefaces, contents, notes)
+  is skipped (`isFrontOrBackMatter`).
+  Models come from `llm.dart` (`LlmPool`): Groq (`groqApiKey`) and Gemini (`geminiApiKey`) in
+  `config/passwords.yaml` under `shared:` (or env `SERVERPOD_PASSWORD_<key>`), optional `groqModels` /
+  `geminiModels` overrides. The pool rotates models and cools a model down after a rate limit. Without any key,
+  generation pauses with a warning. Free tiers are small: keep request volume low (2 books per tick).
 - **Feed** (`lib/src/feed/`): per-reader topic and book affinity (`topic_affinity`, `book_affinity`), updated by
   signals in `affinity.dart` (dwell time, likes, saves, comments, quiz, open-book, follows, onboarding).
   `FeedService.forYou` picks unseen candidates, scores them, then applies diversity and exploration rules.
   Low supply raises `book.popularity`, which raises that book's generation target.
+- **Official account** (`lib/src/official/`): `OfficialService` creates the @limick `Reader` (`official: true`),
+  the welcome post and tips (`OfficialPost`), room welcomes, and daily posts built from real data only (book of
+  the day, word of the day, weekly digest with real counts, room "Question of the day" from a real debate post).
+  `FeedService.forYou` inserts one unseen official post per fresh session (`OfficialSeen`). `BookReplies`
+  answers reader questions in comments as the book (AI, grounded in the passage), via the `bookReply`
+  FutureCall; such comments are stored under the official account with `asBookId` set. Never add fake users,
+  comments or numbers: the user explicitly requires that all activity and stats are real.
+- **Demo accounts** (`lib/src/official/demo_accounts.dart`): `DemoAccounts.ensure` runs at boot and creates real,
+  signable accounts from `<key>Email` / `<key>Password` in `passwords.yaml` (`shared:`): `tester` (for judges:
+  software engineering; technology, science, philosophy, history, self-improvement) and `sheun` (frontend/React;
+  economics first, plus technology and psychology). They go through `ProfileEndpoint.applyOnboarding`, the same
+  path as real onboarding. Credentials are never committed; the user's copy is in `.private/ACCOUNTS.md`.
 - **Endpoints** (`lib/src/endpoints/`): profile (onboarding, streaks, stats, export, delete), feed, book
   (catalogue, reader, progress), comment (+ `watch` stream), room (+ `live` stream with presence), word (Leitner
   review), studyBreak, moderation, library (public status). Errors for users are `AppException`.
@@ -37,6 +57,11 @@ from. Built for the Serverpod hackathon (deadline 14 Oct 2026); planning notes l
 - Raw SQL in tests runs inside a transaction, so `NOW()` is the transaction start: pass Dart timestamps instead.
 - Double columns compare against doubles (`t.score > 0.0`).
 - Use `flutter pub get` / `flutter analyze` for the Flutter package; `dart fix` there rewrites `pubspec.yaml`.
+- Never use `replaceAll(regex, r'$1')`: Dart inserts a literal "$1". Use `replaceAllMapped`.
+- `serverpod start`'s incremental compiler can get stuck on an old build (hot restarts then keep running stale
+  code). Symptom: new log lines or behaviour never appear. Fix: stop `serverpod start` fully and start it again.
+- The watcher regenerates on every save; if a file has a syntax error at that moment, generated code (test
+  tools, future call accessors) can come out incomplete. Run `serverpod generate` once to repair.
 
 ## Working with this project
 

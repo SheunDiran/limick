@@ -13,6 +13,7 @@ import '../widgets/covers.dart';
 import 'book_screen.dart';
 import 'discover_screen.dart';
 import 'feed_screen.dart';
+import 'notifications_screen.dart';
 import 'profile_screen.dart';
 import 'reader_screen.dart';
 import 'rooms_screen.dart';
@@ -44,12 +45,23 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _breakDone = app.breakFinished.stream.listen((_) => _finishBreak());
+    app.tabRequest.addListener(_switchTab);
+  }
+
+  void _switchTab() {
+    final tab = app.tabRequest.value;
+    if (tab == null) return;
+    app.tabRequest.value = null;
+    // Leave any pushed screens so the tab is visible.
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() => _tab = tab);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _breakDone?.cancel();
+    app.tabRequest.removeListener(_switchTab);
     super.dispose();
   }
 
@@ -178,16 +190,32 @@ class _SideNav extends StatelessWidget {
               : CrossAxisAlignment.center,
           children: [
             Padding(
-              padding: EdgeInsets.only(left: expanded ? 14 : 0, bottom: 28),
-              child: Text(
-                expanded ? 'limick' : 'l',
-                style: serif(
-                  size: 28,
-                  weight: FontWeight.w600,
-                  color: p.accent,
-                ),
+              padding: EdgeInsets.only(
+                left: expanded ? 14 : 0,
+                right: expanded ? 4 : 0,
+                bottom: expanded ? 20 : 16,
+              ),
+              child: Row(
+                mainAxisAlignment: expanded
+                    ? MainAxisAlignment.spaceBetween
+                    : MainAxisAlignment.center,
+                children: [
+                  Text(
+                    expanded ? 'limick' : 'l',
+                    style: serif(
+                      size: 28,
+                      weight: FontWeight.w600,
+                      color: p.accent,
+                    ),
+                  ),
+                  if (expanded) const _SideNavNotificationBell(),
+                ],
               ),
             ),
+            if (!expanded) ...[
+              const _SideNavNotificationBell(),
+              const SizedBox(height: 12),
+            ],
             for (final (i, d) in _HomeShellState._destinations.indexed)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -441,3 +469,29 @@ class _ContextPanelState extends State<_ContextPanel> {
 void openBook(BuildContext context, int bookId) => Navigator.of(context).push(
   MaterialPageRoute(builder: (_) => BookScreen(bookId: bookId)),
 );
+
+class _SideNavNotificationBell extends StatelessWidget {
+  const _SideNavNotificationBell();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return ListenableBuilder(
+      listenable: app,
+      builder: (context, _) {
+        final count = app.me?.unreadNotifications ?? 0;
+        return IconButton(
+          tooltip: 'Notifications',
+          icon: Badge(
+            isLabelVisible: count > 0,
+            label: Text('$count'),
+            child: Icon(Icons.notifications_outlined, color: p.muted),
+          ),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+          ),
+        );
+      },
+    );
+  }
+}

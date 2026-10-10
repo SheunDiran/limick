@@ -20,6 +20,7 @@ abstract class Comment
     required this.profileId,
     this.parentId,
     required this.body,
+    this.asBookId,
     int? likeCount,
     int? replyCount,
     bool? deleted,
@@ -35,6 +36,7 @@ abstract class Comment
     required int profileId,
     int? parentId,
     required String body,
+    int? asBookId,
     int? likeCount,
     int? replyCount,
     bool? deleted,
@@ -48,6 +50,7 @@ abstract class Comment
       profileId: jsonSerialization['profileId'] as int,
       parentId: jsonSerialization['parentId'] as int?,
       body: jsonSerialization['body'] as String,
+      asBookId: jsonSerialization['asBookId'] as int?,
       likeCount: jsonSerialization['likeCount'] as int?,
       replyCount: jsonSerialization['replyCount'] as int?,
       deleted: jsonSerialization['deleted'] == null
@@ -74,6 +77,10 @@ abstract class Comment
 
   String body;
 
+  /// Set when a book account replied (AI, grounded in the passage). The
+  /// comment is stored under the official account.
+  int? asBookId;
+
   int likeCount;
 
   int replyCount;
@@ -94,6 +101,7 @@ abstract class Comment
     int? profileId,
     int? parentId,
     String? body,
+    int? asBookId,
     int? likeCount,
     int? replyCount,
     bool? deleted,
@@ -108,6 +116,7 @@ abstract class Comment
       'profileId': profileId,
       if (parentId != null) 'parentId': parentId,
       'body': body,
+      if (asBookId != null) 'asBookId': asBookId,
       'likeCount': likeCount,
       'replyCount': replyCount,
       'deleted': deleted,
@@ -124,6 +133,7 @@ abstract class Comment
       'profileId': profileId,
       if (parentId != null) 'parentId': parentId,
       'body': body,
+      if (asBookId != null) 'asBookId': asBookId,
       'likeCount': likeCount,
       'replyCount': replyCount,
       'deleted': deleted,
@@ -168,6 +178,7 @@ class _CommentImpl extends Comment {
     required int profileId,
     int? parentId,
     required String body,
+    int? asBookId,
     int? likeCount,
     int? replyCount,
     bool? deleted,
@@ -178,6 +189,7 @@ class _CommentImpl extends Comment {
          profileId: profileId,
          parentId: parentId,
          body: body,
+         asBookId: asBookId,
          likeCount: likeCount,
          replyCount: replyCount,
          deleted: deleted,
@@ -194,6 +206,7 @@ class _CommentImpl extends Comment {
     int? profileId,
     Object? parentId = _Undefined,
     String? body,
+    Object? asBookId = _Undefined,
     int? likeCount,
     int? replyCount,
     bool? deleted,
@@ -205,6 +218,7 @@ class _CommentImpl extends Comment {
       profileId: profileId ?? this.profileId,
       parentId: parentId is int? ? parentId : this.parentId,
       body: body ?? this.body,
+      asBookId: asBookId is int? ? asBookId : this.asBookId,
       likeCount: likeCount ?? this.likeCount,
       replyCount: replyCount ?? this.replyCount,
       deleted: deleted ?? this.deleted,
@@ -233,6 +247,11 @@ class CommentUpdateTable extends _is.UpdateTable<CommentTable> {
 
   _is.ColumnValue<String, String> body(String value) => _is.ColumnValue(
     table.body,
+    value,
+  );
+
+  _is.ColumnValue<int, int> asBookId(int? value) => _is.ColumnValue(
+    table.asBookId,
     value,
   );
 
@@ -277,6 +296,10 @@ class CommentTable extends _is.Table<int?> {
       'body',
       this,
     );
+    asBookId = _is.ColumnInt(
+      'asBookId',
+      this,
+    );
     likeCount = _is.ColumnInt(
       'likeCount',
       this,
@@ -309,6 +332,10 @@ class CommentTable extends _is.Table<int?> {
 
   late final _is.ColumnString body;
 
+  /// Set when a book account replied (AI, grounded in the passage). The
+  /// comment is stored under the official account.
+  late final _is.ColumnInt asBookId;
+
   late final _is.ColumnInt likeCount;
 
   late final _is.ColumnInt replyCount;
@@ -324,6 +351,7 @@ class CommentTable extends _is.Table<int?> {
     profileId,
     parentId,
     body,
+    asBookId,
     likeCount,
     replyCount,
     deleted,

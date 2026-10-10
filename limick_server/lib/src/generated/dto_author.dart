@@ -20,13 +20,17 @@ abstract class Author
     required this.handle,
     required this.displayName,
     required this.avatarHue,
-  });
+    bool? official,
+    this.bookId,
+  }) : official = official ?? false;
 
   factory Author({
     required int id,
     required String handle,
     required String displayName,
     required int avatarHue,
+    bool? official,
+    int? bookId,
   }) = _AuthorImpl;
 
   factory Author.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -35,6 +39,10 @@ abstract class Author
       handle: jsonSerialization['handle'] as String,
       displayName: jsonSerialization['displayName'] as String,
       avatarHue: jsonSerialization['avatarHue'] as int,
+      official: jsonSerialization['official'] == null
+          ? null
+          : _is.BoolJsonExtension.fromJson(jsonSerialization['official']),
+      bookId: jsonSerialization['bookId'] as int?,
     );
   }
 
@@ -46,6 +54,12 @@ abstract class Author
 
   int avatarHue;
 
+  /// The platform's own account.
+  bool official;
+
+  /// Set when this is a book account speaking (AI reply).
+  int? bookId;
+
   /// Returns a shallow copy of this [Author]
   /// with some or all fields replaced by the given arguments.
   @_is.useResult
@@ -54,6 +68,8 @@ abstract class Author
     String? handle,
     String? displayName,
     int? avatarHue,
+    bool? official,
+    int? bookId,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -63,6 +79,8 @@ abstract class Author
       'handle': handle,
       'displayName': displayName,
       'avatarHue': avatarHue,
+      'official': official,
+      if (bookId != null) 'bookId': bookId,
     };
   }
 
@@ -74,6 +92,8 @@ abstract class Author
       'handle': handle,
       'displayName': displayName,
       'avatarHue': avatarHue,
+      'official': official,
+      if (bookId != null) 'bookId': bookId,
     };
   }
 
@@ -83,17 +103,23 @@ abstract class Author
   }
 }
 
+class _Undefined {}
+
 class _AuthorImpl extends Author {
   _AuthorImpl({
     required int id,
     required String handle,
     required String displayName,
     required int avatarHue,
+    bool? official,
+    int? bookId,
   }) : super._(
          id: id,
          handle: handle,
          displayName: displayName,
          avatarHue: avatarHue,
+         official: official,
+         bookId: bookId,
        );
 
   /// Returns a shallow copy of this [Author]
@@ -105,12 +131,16 @@ class _AuthorImpl extends Author {
     String? handle,
     String? displayName,
     int? avatarHue,
+    bool? official,
+    Object? bookId = _Undefined,
   }) {
     return Author(
       id: id ?? this.id,
       handle: handle ?? this.handle,
       displayName: displayName ?? this.displayName,
       avatarHue: avatarHue ?? this.avatarHue,
+      official: official ?? this.official,
+      bookId: bookId is int? ? bookId : this.bookId,
     );
   }
 }

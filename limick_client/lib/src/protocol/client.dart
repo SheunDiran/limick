@@ -36,6 +36,7 @@ import 'package:limick_client/src/protocol/dto_room_message_view.dart'
     as _ijflktyh;
 import 'package:limick_client/src/protocol/dto_room_view.dart' as _i17464ln;
 import 'package:limick_client/src/protocol/dto_view_signal.dart' as _ikggovgk;
+import 'package:limick_client/src/protocol/notification.dart' as _itxpegl2;
 import 'package:limick_client/src/protocol/reader.dart' as _i1rt7yr0;
 import 'package:limick_client/src/protocol/reading_progress.dart' as _i7xi8k16;
 import 'package:limick_client/src/protocol/saved_word.dart' as _imgi0cxh;
@@ -607,6 +608,37 @@ class EndpointModeration extends _isc.EndpointRef {
       );
 }
 
+/// Notifications for reader interactions (comment replies, comment likes, book replies).
+/// {@category Endpoint}
+class EndpointNotification extends _isc.EndpointRef {
+  EndpointNotification(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'notification';
+
+  /// Returns the signed-in reader's notifications, 20 per page, newest first.
+  _ida.Future<List<_itxpegl2.ReaderNotification>> list(int? beforeId) =>
+      caller.callServerEndpoint<List<_itxpegl2.ReaderNotification>>(
+        'notification',
+        'list',
+        {'beforeId': beforeId},
+      );
+
+  /// Number of unread notifications for the signed-in reader.
+  _ida.Future<int> unreadCount() => caller.callServerEndpoint<int>(
+    'notification',
+    'unreadCount',
+    {},
+  );
+
+  /// Marks all unread notifications as read.
+  _ida.Future<void> markAllRead() => caller.callServerEndpoint<void>(
+    'notification',
+    'markAllRead',
+    {},
+  );
+}
+
 /// Onboarding, profiles, streaks, stats, data export and account deletion.
 /// {@category Endpoint}
 class EndpointProfile extends _isc.EndpointRef {
@@ -907,6 +939,7 @@ class Client extends _isc.ServerpodClientShared {
     feed = EndpointFeed(this);
     library = EndpointLibrary(this);
     moderation = EndpointModeration(this);
+    notification = EndpointNotification(this);
     profile = EndpointProfile(this);
     room = EndpointRoom(this);
     studyBreak = EndpointStudyBreak(this);
@@ -928,6 +961,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointModeration moderation;
 
+  late final EndpointNotification notification;
+
   late final EndpointProfile profile;
 
   late final EndpointRoom room;
@@ -947,6 +982,7 @@ class Client extends _isc.ServerpodClientShared {
     'feed': feed,
     'library': library,
     'moderation': moderation,
+    'notification': notification,
     'profile': profile,
     'room': room,
     'studyBreak': studyBreak,

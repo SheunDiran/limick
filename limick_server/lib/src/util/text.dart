@@ -9,7 +9,7 @@ String normalizeForMatch(String input) {
   return input
       .replaceAll(RegExp('[‘’‛′]'), "'")
       .replaceAll(RegExp('[“”‟″]'), '"')
-      .replaceAll(RegExp('[–—]'), '-')
+      .replaceAll(RegExp('[\u2010-\u2015\u2212\u00AD]'), '-')
       .replaceAll('_', '')
       .replaceAll(_whitespace, ' ')
       .trim()
@@ -31,7 +31,7 @@ String normalizeForMatch(String input) {
     var c = source[i];
     if ('‘’‛′'.contains(c)) c = "'";
     if ('“”‟″'.contains(c)) c = '"';
-    if ('–—'.contains(c)) c = '-';
+    if ('\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u00AD'.contains(c)) c = '-';
     if (c == '_') continue;
     if (c.trim().isEmpty) {
       if (lastWasSpace) continue;

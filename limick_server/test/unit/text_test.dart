@@ -18,6 +18,13 @@ void main() {
       expect(source.substring(range!.start, range.end), contains('truth'));
     });
 
+    test('when the model uses a different hyphen then it is still found', () {
+      expect(
+        findQuote('the so-called sophist spoke', 'the so\u2011called sophist'),
+        isNotNull,
+      );
+    });
+
     test('when the model invents a quote then it is rejected', () {
       expect(
         findQuote(source, 'It is a lie universally acknowledged.'),

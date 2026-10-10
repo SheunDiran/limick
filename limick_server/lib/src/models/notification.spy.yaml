@@ -1,0 +1,14 @@
+class: ReaderNotification
+table: reader_notification
+fields:
+  profileId: int, relation(parent=reader, onDelete=Cascade)
+  actorName: String
+  actorHandle: String
+  kind: NotificationKind
+  postId: int?
+  commentId: int?
+  read: bool, default=false
+  createdAt: DateTime, default=now
+indexes:
+  reader_notification_inbox_idx:
+    fields: profileId, read

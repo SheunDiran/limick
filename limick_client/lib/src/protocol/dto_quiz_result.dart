@@ -10,6 +10,7 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:limick_client/src/protocol/protocol.dart' as _i0imvg6w;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
 
 abstract class QuizResult
@@ -19,6 +20,7 @@ abstract class QuizResult
     required this.correctIndex,
     required this.explanation,
     required this.answerCount,
+    this.counts,
   });
 
   factory QuizResult({
@@ -26,6 +28,7 @@ abstract class QuizResult
     required int correctIndex,
     required String explanation,
     required int answerCount,
+    List<int>? counts,
   }) = _QuizResultImpl;
 
   factory QuizResult.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -34,6 +37,11 @@ abstract class QuizResult
       correctIndex: jsonSerialization['correctIndex'] as int,
       explanation: jsonSerialization['explanation'] as String,
       answerCount: jsonSerialization['answerCount'] as int,
+      counts: jsonSerialization['counts'] == null
+          ? null
+          : _i0imvg6w.Protocol().deserialize<List<int>>(
+              jsonSerialization['counts'],
+            ),
     );
   }
 
@@ -45,6 +53,9 @@ abstract class QuizResult
 
   int answerCount;
 
+  /// Real answer counts per option, including this answer.
+  List<int>? counts;
+
   /// Returns a shallow copy of this [QuizResult]
   /// with some or all fields replaced by the given arguments.
   @_isc.useResult
@@ -53,6 +64,7 @@ abstract class QuizResult
     int? correctIndex,
     String? explanation,
     int? answerCount,
+    List<int>? counts,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -62,6 +74,7 @@ abstract class QuizResult
       'correctIndex': correctIndex,
       'explanation': explanation,
       'answerCount': answerCount,
+      if (counts != null) 'counts': counts?.toJson(),
     };
   }
 
@@ -73,6 +86,7 @@ abstract class QuizResult
       'correctIndex': correctIndex,
       'explanation': explanation,
       'answerCount': answerCount,
+      if (counts != null) 'counts': counts?.toJson(),
     };
   }
 
@@ -82,17 +96,21 @@ abstract class QuizResult
   }
 }
 
+class _Undefined {}
+
 class _QuizResultImpl extends QuizResult {
   _QuizResultImpl({
     required bool correct,
     required int correctIndex,
     required String explanation,
     required int answerCount,
+    List<int>? counts,
   }) : super._(
          correct: correct,
          correctIndex: correctIndex,
          explanation: explanation,
          answerCount: answerCount,
+         counts: counts,
        );
 
   /// Returns a shallow copy of this [QuizResult]
@@ -104,12 +122,16 @@ class _QuizResultImpl extends QuizResult {
     int? correctIndex,
     String? explanation,
     int? answerCount,
+    Object? counts = _Undefined,
   }) {
     return QuizResult(
       correct: correct ?? this.correct,
       correctIndex: correctIndex ?? this.correctIndex,
       explanation: explanation ?? this.explanation,
       answerCount: answerCount ?? this.answerCount,
+      counts: counts is List<int>?
+          ? counts
+          : this.counts?.map((e0) => e0).toList(),
     );
   }
 }

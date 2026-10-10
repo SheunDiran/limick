@@ -47,6 +47,13 @@ class ModerationEndpoint extends Endpoint {
     if (profileId == profile.id) {
       throw AppException(message: "You can't block yourself.", code: 'invalid');
     }
+    final target = await Reader.db.findById(session, profileId);
+    if (target == null || target.official) {
+      throw AppException(
+        message: 'This account cannot be blocked.',
+        code: 'invalid',
+      );
+    }
     final existing = await UserBlock.db.findFirstRow(
       session,
       where: (t) =>

@@ -5,3 +5,7 @@ fields:
   handle: String
   displayName: String
   avatarHue: int
+  ### The platform's own account.
+  official: bool, default=false
+  ### Set when this is a book account speaking (AI reply).
+  bookId: int?

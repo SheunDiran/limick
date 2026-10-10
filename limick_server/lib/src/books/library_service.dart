@@ -287,6 +287,88 @@ class LibraryService {
   }
 }
 
+/// One-off repair for books ingested before the italic-marker fix, whose
+/// text contains a literal "$1" where an italic word used to be. Chapters are
+/// rewritten in place (same ids), so posts, likes and reading progress
+/// survive; only posts that quote the broken text are removed.
+class ItalicsRepair {
+  static var _done = false;
+
+  /// Books tried in this server run. Each is tried once: a book that still
+  /// contains "$1" afterwards genuinely has it in its text (a price, say).
+  static final _attempted = <int>{};
+
+  static Future<void> run(Session session, {int maxBooks = 3}) async {
+    if (_done) return;
+    final skip = _attempted.isEmpty
+        ? ''
+        : 'AND "bookId" NOT IN (${_attempted.join(',')})';
+    final rows = await session.db.unsafeQuery(
+      'SELECT DISTINCT "bookId" FROM chapter WHERE text LIKE \'%\$1%\' $skip LIMIT @limit',
+      parameters: QueryParameters.named({'limit': maxBooks}),
+    );
+    if (rows.isEmpty) {
+      _done = true;
+      return;
+    }
+    for (final row in rows) {
+      _attempted.add(row[0] as int);
+      final book = await Book.db.findById(session, row[0] as int);
+      if (book == null) continue;
+      try {
+        final raw = await Gutenberg.fetchBookText(book.gutenbergId);
+        final parsed = splitIntoChapters(stripBoilerplate(raw));
+        final existing = await Chapter.db.find(
+          session,
+          where: (t) => t.bookId.equals(book.id!),
+          orderBy: (t) => t.position,
+        );
+        if (parsed.length != existing.length) {
+          // The split changed; a fresh ingest is the only clean fix.
+          await LibraryService.requestIngest(
+            session,
+            book.copyWith(status: BookStatus.failed),
+          );
+          session.log('Re-ingesting "${book.title}" to repair its text.');
+          continue;
+        }
+        await session.db.transaction((tx) async {
+          for (final (i, chapter) in existing.indexed) {
+            await Chapter.db.updateRow(
+              session,
+              chapter.copyWith(
+                title: parsed[i].title,
+                text: parsed[i].text,
+                wordCount: parsed[i].wordCount,
+              ),
+              transaction: tx,
+            );
+          }
+          final removed = await Post.db.deleteWhere(
+            session,
+            where: (t) =>
+                t.bookId.equals(book.id!) &
+                (t.body.like(r'%$1%') | t.quote.like(r'%$1%')),
+            transaction: tx,
+          );
+          if (removed.isNotEmpty) {
+            await session.db.unsafeExecute(
+              'UPDATE book SET "postCount" = GREATEST("postCount" - ${removed.length}, 0) WHERE id = ${book.id}',
+              transaction: tx,
+            );
+          }
+        });
+        session.log('Repaired the text of "${book.title}".');
+      } catch (e) {
+        session.log(
+          'Text repair failed for "${book.title}": $e',
+          level: LogLevel.warning,
+        );
+      }
+    }
+  }
+}
+
 String topicLabel(Topic topic) => switch (topic) {
   Topic.medicine => 'Medicine',
   Topic.law => 'Law',

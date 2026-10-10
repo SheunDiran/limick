@@ -1,0 +1,5 @@
+enum: NotificationKind
+values:
+  - reply
+  - commentLike
+  - bookReply

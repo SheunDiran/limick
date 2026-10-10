@@ -5,12 +5,15 @@ import 'package:limick_client/limick_client.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../client.dart';
+import '../state/app_state.dart';
 import '../state/view_tracker.dart';
 import '../theme.dart';
 import '../widgets/break_widgets.dart';
 import '../widgets/common.dart';
+import '../widgets/official_card.dart';
 import '../widgets/post_card.dart';
 import '../widgets/word_review.dart';
+import 'notifications_screen.dart';
 import 'reader_screen.dart';
 
 enum FeedMode { forYou, following }
@@ -59,7 +62,11 @@ class _FeedScreenState extends State<FeedScreen>
                       )
                     : null,
                 actions: narrow
-                    ? const [BreakButton(), SizedBox(width: 12)]
+                    ? const [
+                        _NotificationButton(),
+                        BreakButton(),
+                        SizedBox(width: 8),
+                      ]
                     : null,
                 bottom: TabBar(
                   controller: _tabs,
@@ -255,7 +262,9 @@ class _FeedListState extends State<_FeedList>
             final item = entry as FeedItem;
             return Column(
               children: [
-                if (item.kind == FeedItemKind.review)
+                if (item.kind == FeedItemKind.official)
+                  OfficialCard(item: item)
+                else if (item.kind == FeedItemKind.review)
                   WordReviewCard(
                     word: item.review!,
                     onDone: () => setState(() => _items.remove(item)),
@@ -473,6 +482,31 @@ class _CheckIn extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NotificationButton extends StatelessWidget {
+  const _NotificationButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: app,
+      builder: (context, _) {
+        final count = app.me?.unreadNotifications ?? 0;
+        return IconButton(
+          tooltip: 'Notifications',
+          icon: Badge(
+            isLabelVisible: count > 0,
+            label: Text('$count'),
+            child: const Icon(Icons.notifications_outlined),
+          ),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+          ),
+        );
+      },
     );
   }
 }

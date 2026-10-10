@@ -11,6 +11,9 @@ fields:
   quizChoice: int?
   quizCorrectIndex: int?
   quizExplanation: String?
+  ### Real answer counts per option, revealed after the reader answers.
+  quizCounts: List<int>?
   debateVote: bool?
   reason: String?
   review: SavedWord?
+  official: OfficialPost?

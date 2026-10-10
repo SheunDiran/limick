@@ -42,6 +42,10 @@ moderation:
   - report:
   - setBlocked:
   - blocked:
+notification:
+  - list:
+  - unreadCount:
+  - markAllRead:
 profile:
   - me:
   - isHandleAvailable:

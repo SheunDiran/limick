@@ -164,7 +164,7 @@ class _Pitch extends StatelessWidget {
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: Text(
                   'A feed where every post comes from a real book. Medicine, law, science, '
-                  'philosophy and thousands of classics, one tap from the chapter they came from.',
+                  'philosophy and the great classics, one tap from the chapter they came from.',
                   style: TextStyle(
                     fontSize: wide ? 17 : 15,
                     color: p.muted,

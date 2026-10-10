@@ -23,13 +23,16 @@ abstract class Me
     required this.suggestedHandle,
     this.activeBreak,
     int? dueWords,
-  }) : dueWords = dueWords ?? 0;
+    int? unreadNotifications,
+  }) : dueWords = dueWords ?? 0,
+       unreadNotifications = unreadNotifications ?? 0;
 
   factory Me({
     _in4ni7b0.Reader? profile,
     required String suggestedHandle,
     _i199zodz.StudyBreak? activeBreak,
     int? dueWords,
+    int? unreadNotifications,
   }) = _MeImpl;
 
   factory Me.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -46,6 +49,7 @@ abstract class Me
               jsonSerialization['activeBreak'],
             ),
       dueWords: jsonSerialization['dueWords'] as int?,
+      unreadNotifications: jsonSerialization['unreadNotifications'] as int?,
     );
   }
 
@@ -57,6 +61,8 @@ abstract class Me
 
   int dueWords;
 
+  int unreadNotifications;
+
   /// Returns a shallow copy of this [Me]
   /// with some or all fields replaced by the given arguments.
   @_isc.useResult
@@ -65,6 +71,7 @@ abstract class Me
     String? suggestedHandle,
     _i199zodz.StudyBreak? activeBreak,
     int? dueWords,
+    int? unreadNotifications,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -74,6 +81,7 @@ abstract class Me
       'suggestedHandle': suggestedHandle,
       if (activeBreak != null) 'activeBreak': activeBreak?.toJson(),
       'dueWords': dueWords,
+      'unreadNotifications': unreadNotifications,
     };
   }
 
@@ -85,6 +93,7 @@ abstract class Me
       'suggestedHandle': suggestedHandle,
       if (activeBreak != null) 'activeBreak': activeBreak?.toJsonForProtocol(),
       'dueWords': dueWords,
+      'unreadNotifications': unreadNotifications,
     };
   }
 
@@ -102,11 +111,13 @@ class _MeImpl extends Me {
     required String suggestedHandle,
     _i199zodz.StudyBreak? activeBreak,
     int? dueWords,
+    int? unreadNotifications,
   }) : super._(
          profile: profile,
          suggestedHandle: suggestedHandle,
          activeBreak: activeBreak,
          dueWords: dueWords,
+         unreadNotifications: unreadNotifications,
        );
 
   /// Returns a shallow copy of this [Me]
@@ -118,6 +129,7 @@ class _MeImpl extends Me {
     String? suggestedHandle,
     Object? activeBreak = _Undefined,
     int? dueWords,
+    int? unreadNotifications,
   }) {
     return Me(
       profile: profile is _in4ni7b0.Reader?
@@ -128,6 +140,7 @@ class _MeImpl extends Me {
           ? activeBreak
           : this.activeBreak?.copyWith(),
       dueWords: dueWords ?? this.dueWords,
+      unreadNotifications: unreadNotifications ?? this.unreadNotifications,
     );
   }
 }

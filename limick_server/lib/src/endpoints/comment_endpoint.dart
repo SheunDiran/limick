@@ -1,7 +1,10 @@
 import 'package:serverpod/serverpod.dart';
 
 import '../feed/affinity.dart';
+import '../generated/future_calls.dart';
 import '../generated/protocol.dart';
+import '../official/book_replies.dart';
+import '../official/official_service.dart';
 import '../util/current_profile.dart';
 import '../util/text.dart';
 
@@ -76,8 +79,9 @@ class CommentEndpoint extends Endpoint {
     }
 
     int? parent;
+    Comment? parentComment;
     if (parentId != null) {
-      final parentComment = await Comment.db.findById(session, parentId);
+      parentComment = await Comment.db.findById(session, parentId);
       if (parentComment == null || parentComment.postId != postId) {
         throw AppException(message: 'That comment is gone.', code: 'not_found');
       }
@@ -102,6 +106,35 @@ class CommentEndpoint extends Endpoint {
       );
     }
     await Affinity.forPost(session, profile.id!, post, Signals.comment);
+
+    // Notify parent author on replies, unless self-reply or blocked.
+    if (parentComment != null && parentComment.profileId != profile.id!) {
+      final blocked = await blockedIds(session, parentComment.profileId);
+      if (!blocked.contains(profile.id!)) {
+        await ReaderNotification.db.insertRow(
+          session,
+          ReaderNotification(
+            profileId: parentComment.profileId,
+            actorName: profile.displayName,
+            actorHandle: profile.handle,
+            kind: NotificationKind.reply,
+            postId: postId,
+            commentId: comment.id,
+          ),
+        );
+      }
+    }
+
+    // Questions to the book get an answer from the book, in the background.
+    final book = await Book.db.findById(session, post.bookId);
+    if (book != null &&
+        BookReplies.wants(comment, book, parent: parentComment) &&
+        BookReplies.allow(profile.id!)) {
+      await Serverpod.instance.futureCalls
+          .callWithDelay(const Duration(seconds: 1))
+          .bookReply
+          .reply(comment.id!);
+    }
 
     final view = CommentView(comment: comment, author: authorOf(profile));
     await session.messages.postMessage(
@@ -166,6 +199,22 @@ class CommentEndpoint extends Endpoint {
         CommentLike(profileId: profile.id!, commentId: commentId),
       );
       delta = 1;
+      if (comment.profileId != profile.id!) {
+        final blocked = await blockedIds(session, comment.profileId);
+        if (!blocked.contains(profile.id!)) {
+          await ReaderNotification.db.insertRow(
+            session,
+            ReaderNotification(
+              profileId: comment.profileId,
+              actorName: profile.displayName,
+              actorHandle: profile.handle,
+              kind: NotificationKind.commentLike,
+              postId: comment.postId,
+              commentId: comment.id,
+            ),
+          );
+        }
+      }
     } else if (!liked && existing != null) {
       await CommentLike.db.deleteRow(session, existing);
       delta = -1;
@@ -222,9 +271,28 @@ class CommentEndpoint extends Endpoint {
           t.profileId.equals(viewerId) &
           t.commentId.inSet(comments.map((c) => c.id!).toSet()),
     )).map((l) => l.commentId).toSet();
+    final bookIds = comments.map((c) => c.asBookId).whereType<int>().toSet();
+    final books = bookIds.isEmpty
+        ? <int, Book>{}
+        : {
+            for (final b in await Book.db.find(
+              session,
+              where: (t) => t.id.inSet(bookIds),
+            ))
+              b.id!: b,
+          };
+    final official = bookIds.isEmpty
+        ? null
+        : await OfficialService.account(session);
     return [
       for (final c in comments)
-        if (authors[c.profileId] != null)
+        if (c.asBookId != null && books[c.asBookId] != null && official != null)
+          CommentView(
+            comment: c,
+            author: bookAuthor(official, books[c.asBookId]!),
+            likedByMe: liked.contains(c.id),
+          )
+        else if (authors[c.profileId] != null)
           CommentView(
             comment: c,
             author: authors[c.profileId]!,

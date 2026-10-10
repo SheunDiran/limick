@@ -1,0 +1,7 @@
+enum: OfficialPostKind
+values:
+  - welcome
+  - tip
+  - bookOfTheDay
+  - wordOfTheDay
+  - weeklyDigest

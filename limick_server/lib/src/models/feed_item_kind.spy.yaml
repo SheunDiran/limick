@@ -2,3 +2,4 @@ enum: FeedItemKind
 values:
   - post
   - review
+  - official

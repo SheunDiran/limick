@@ -1,8 +1,10 @@
 import 'package:serverpod/serverpod.dart';
 
+import '../ai/llm.dart';
 import '../ai/post_generator.dart';
 import '../books/library_service.dart';
 import '../generated/protocol.dart';
+import '../official/official_service.dart';
 
 /// The background pipeline, run on a recurring schedule. Each tick:
 /// imports the Gutenberg catalogue if it is missing (retrying every
@@ -12,6 +14,7 @@ class LibraryFutureCall extends FutureCall {
   static var _warnedNoKey = false;
   static var _running = false;
   static DateTime? _lastCatalogAttempt;
+  static DateTime? _lastDaily;
 
   Future<void> tick(Session session) async {
     // A slow round must not overlap the next one, or two rounds could read
@@ -21,18 +24,21 @@ class LibraryFutureCall extends FutureCall {
     try {
       await LibraryService.ingestNext(session, count: 3);
       await _maybeImportCatalog(session);
+      await ItalicsRepair.run(session);
+      await _maybePublishDaily(session);
 
-      if (PostGenerator.apiKey(session) == null) {
+      if (!LlmPool.isConfigured(session)) {
         if (!_warnedNoKey) {
           session.log(
-            'anthropicApiKey is not set in config/passwords.yaml: post generation is paused.',
+            'No AI provider configured: add groqApiKey and/or geminiApiKey to '
+            'config/passwords.yaml (shared:). Post generation is paused.',
             level: LogLevel.warning,
           );
           _warnedNoKey = true;
         }
         return;
       }
-      await PostGenerator.generateRound(session, books: 4);
+      await PostGenerator.generateRound(session);
     } catch (e, stackTrace) {
       session.log(
         'Library tick failed',
@@ -42,6 +48,19 @@ class LibraryFutureCall extends FutureCall {
       );
     } finally {
       _running = false;
+    }
+  }
+
+  /// Daily official posts and room prompts. Checked every ten minutes; each
+  /// item is published at most once per day.
+  static Future<void> _maybePublishDaily(Session session) async {
+    final last = _lastDaily;
+    if (last != null && DateTime.now().difference(last).inMinutes < 10) return;
+    _lastDaily = DateTime.now();
+    try {
+      await OfficialService.publishDaily(session);
+    } catch (e) {
+      session.log('Daily official posts failed: $e', level: LogLevel.warning);
     }
   }
 

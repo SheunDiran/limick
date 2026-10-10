@@ -24,6 +24,7 @@ abstract class Post implements _is.TableRow<int?>, _is.ProtocolSerialization {
     required this.chapterPosition,
     required this.kind,
     required this.body,
+    this.style,
     this.quote,
     this.parts,
     this.word,
@@ -59,6 +60,7 @@ abstract class Post implements _is.TableRow<int?>, _is.ProtocolSerialization {
     required int chapterPosition,
     required _i8wd172o.PostKind kind,
     required String body,
+    String? style,
     String? quote,
     List<String>? parts,
     String? word,
@@ -88,6 +90,7 @@ abstract class Post implements _is.TableRow<int?>, _is.ProtocolSerialization {
       chapterPosition: jsonSerialization['chapterPosition'] as int,
       kind: _i8wd172o.PostKind.fromJson((jsonSerialization['kind'] as String)),
       body: jsonSerialization['body'] as String,
+      style: jsonSerialization['style'] as String?,
       quote: jsonSerialization['quote'] as String?,
       parts: jsonSerialization['parts'] == null
           ? null
@@ -141,6 +144,10 @@ abstract class Post implements _is.TableRow<int?>, _is.ProtocolSerialization {
 
   String body;
 
+  /// The social format the post was written in (hotTake, storytime, pov,
+  /// til, ...). Used to keep the feed varied.
+  String? style;
+
   String? quote;
 
   List<String>? parts;
@@ -192,6 +199,7 @@ abstract class Post implements _is.TableRow<int?>, _is.ProtocolSerialization {
     int? chapterPosition,
     _i8wd172o.PostKind? kind,
     String? body,
+    String? style,
     String? quote,
     List<String>? parts,
     String? word,
@@ -222,6 +230,7 @@ abstract class Post implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'chapterPosition': chapterPosition,
       'kind': kind.toJson(),
       'body': body,
+      if (style != null) 'style': style,
       if (quote != null) 'quote': quote,
       if (parts != null) 'parts': parts?.toJson(),
       if (word != null) 'word': word,
@@ -254,6 +263,7 @@ abstract class Post implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'chapterPosition': chapterPosition,
       'kind': kind.toJson(),
       'body': body,
+      if (style != null) 'style': style,
       if (quote != null) 'quote': quote,
       if (parts != null) 'parts': parts?.toJson(),
       if (word != null) 'word': word,
@@ -312,6 +322,7 @@ class _PostImpl extends Post {
     required int chapterPosition,
     required _i8wd172o.PostKind kind,
     required String body,
+    String? style,
     String? quote,
     List<String>? parts,
     String? word,
@@ -338,6 +349,7 @@ class _PostImpl extends Post {
          chapterPosition: chapterPosition,
          kind: kind,
          body: body,
+         style: style,
          quote: quote,
          parts: parts,
          word: word,
@@ -370,6 +382,7 @@ class _PostImpl extends Post {
     int? chapterPosition,
     _i8wd172o.PostKind? kind,
     String? body,
+    Object? style = _Undefined,
     Object? quote = _Undefined,
     Object? parts = _Undefined,
     Object? word = _Undefined,
@@ -397,6 +410,7 @@ class _PostImpl extends Post {
       chapterPosition: chapterPosition ?? this.chapterPosition,
       kind: kind ?? this.kind,
       body: body ?? this.body,
+      style: style is String? ? style : this.style,
       quote: quote is String? ? quote : this.quote,
       parts: parts is List<String>?
           ? parts
@@ -459,6 +473,11 @@ class PostUpdateTable extends _is.UpdateTable<PostTable> {
 
   _is.ColumnValue<String, String> body(String value) => _is.ColumnValue(
     table.body,
+    value,
+  );
+
+  _is.ColumnValue<String, String> style(String? value) => _is.ColumnValue(
+    table.style,
     value,
   );
 
@@ -591,6 +610,10 @@ class PostTable extends _is.Table<int?> {
       'body',
       this,
     );
+    style = _is.ColumnString(
+      'style',
+      this,
+    );
     quote = _is.ColumnString(
       'quote',
       this,
@@ -690,6 +713,10 @@ class PostTable extends _is.Table<int?> {
 
   late final _is.ColumnString body;
 
+  /// The social format the post was written in (hotTake, storytime, pov,
+  /// til, ...). Used to keep the feed varied.
+  late final _is.ColumnString style;
+
   late final _is.ColumnString quote;
 
   late final _is.ColumnSerializable<List<String>> parts;
@@ -736,6 +763,7 @@ class PostTable extends _is.Table<int?> {
     chapterPosition,
     kind,
     body,
+    style,
     quote,
     parts,
     word,

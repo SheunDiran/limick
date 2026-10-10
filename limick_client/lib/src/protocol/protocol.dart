@@ -19,6 +19,7 @@ import 'package:limick_client/src/protocol/dto_room_message_view.dart'
     as _ijflktyh;
 import 'package:limick_client/src/protocol/dto_room_view.dart' as _i17464ln;
 import 'package:limick_client/src/protocol/dto_view_signal.dart' as _ikggovgk;
+import 'package:limick_client/src/protocol/notification.dart' as _itxpegl2;
 import 'package:limick_client/src/protocol/saved_word.dart' as _imgi0cxh;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
@@ -56,6 +57,11 @@ import 'dto_room_view.dart' as _i1rlo7qg;
 import 'dto_view_signal.dart' as _iamhpvfi;
 import 'feed_item_kind.dart' as _i5lurufd;
 import 'live_event_type.dart' as _ijk6vck4;
+import 'notification.dart' as _irt10kca;
+import 'notification_kind.dart' as _ipnxo26v;
+import 'official_post.dart' as _i2bhchuw;
+import 'official_post_kind.dart' as _iwjxx537;
+import 'official_seen.dart' as _ibehfvf0;
 import 'post.dart' as _iwx4avst;
 import 'post_kind.dart' as _i8wd172o;
 import 'post_like.dart' as _i2v49lle;
@@ -104,6 +110,11 @@ export 'dto_room_view.dart';
 export 'dto_view_signal.dart';
 export 'feed_item_kind.dart';
 export 'live_event_type.dart';
+export 'notification.dart';
+export 'notification_kind.dart';
+export 'official_post.dart';
+export 'official_post_kind.dart';
+export 'official_seen.dart';
 export 'post.dart';
 export 'post_kind.dart';
 export 'post_like.dart';
@@ -249,6 +260,21 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == _ijk6vck4.LiveEventType) {
       return _ijk6vck4.LiveEventType.fromJson(data) as T;
+    }
+    if (t == _irt10kca.ReaderNotification) {
+      return _irt10kca.ReaderNotification.fromJson(data) as T;
+    }
+    if (t == _ipnxo26v.NotificationKind) {
+      return _ipnxo26v.NotificationKind.fromJson(data) as T;
+    }
+    if (t == _i2bhchuw.OfficialPost) {
+      return _i2bhchuw.OfficialPost.fromJson(data) as T;
+    }
+    if (t == _iwjxx537.OfficialPostKind) {
+      return _iwjxx537.OfficialPostKind.fromJson(data) as T;
+    }
+    if (t == _ibehfvf0.OfficialSeen) {
+      return _ibehfvf0.OfficialSeen.fromJson(data) as T;
     }
     if (t == _iwx4avst.Post) {
       return _iwx4avst.Post.fromJson(data) as T;
@@ -402,6 +428,24 @@ class Protocol extends _isc.SerializationManager {
       return (data != null ? _ijk6vck4.LiveEventType.fromJson(data) : null)
           as T;
     }
+    if (t == _isc.getType<_irt10kca.ReaderNotification?>()) {
+      return (data != null ? _irt10kca.ReaderNotification.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_ipnxo26v.NotificationKind?>()) {
+      return (data != null ? _ipnxo26v.NotificationKind.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_i2bhchuw.OfficialPost?>()) {
+      return (data != null ? _i2bhchuw.OfficialPost.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_iwjxx537.OfficialPostKind?>()) {
+      return (data != null ? _iwjxx537.OfficialPostKind.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_ibehfvf0.OfficialSeen?>()) {
+      return (data != null ? _ibehfvf0.OfficialSeen.fromJson(data) : null) as T;
+    }
     if (t == _isc.getType<_iwx4avst.Post?>()) {
       return (data != null ? _iwx4avst.Post.fromJson(data) : null) as T;
     }
@@ -468,14 +512,20 @@ class Protocol extends _isc.SerializationManager {
     if (t == List<String>) {
       return (data as List).map((e) => deserialize<String>(e)).toList() as T;
     }
+    if (t == List<int>) {
+      return (data as List).map((e) => deserialize<int>(e)).toList() as T;
+    }
+    if (t == _isc.getType<List<int>?>()) {
+      return (data != null
+              ? (data as List).map((e) => deserialize<int>(e)).toList()
+              : null)
+          as T;
+    }
     if (t == List<_i8qjxz8q.FeedItem>) {
       return (data as List)
               .map((e) => deserialize<_i8qjxz8q.FeedItem>(e))
               .toList()
           as T;
-    }
-    if (t == List<int>) {
-      return (data as List).map((e) => deserialize<int>(e)).toList() as T;
     }
     if (t == _isc.getType<List<String>?>()) {
       return (data != null
@@ -511,6 +561,12 @@ class Protocol extends _isc.SerializationManager {
     if (t == List<_igl91g7y.Author>) {
       return (data as List)
               .map((e) => deserialize<_igl91g7y.Author>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_itxpegl2.ReaderNotification>) {
+      return (data as List)
+              .map((e) => deserialize<_itxpegl2.ReaderNotification>(e))
               .toList()
           as T;
     }
@@ -574,6 +630,11 @@ class Protocol extends _isc.SerializationManager {
       _iamhpvfi.ViewSignal => 'ViewSignal',
       _i5lurufd.FeedItemKind => 'FeedItemKind',
       _ijk6vck4.LiveEventType => 'LiveEventType',
+      _irt10kca.ReaderNotification => 'ReaderNotification',
+      _ipnxo26v.NotificationKind => 'NotificationKind',
+      _i2bhchuw.OfficialPost => 'OfficialPost',
+      _iwjxx537.OfficialPostKind => 'OfficialPostKind',
+      _ibehfvf0.OfficialSeen => 'OfficialSeen',
       _iwx4avst.Post => 'Post',
       _i8wd172o.PostKind => 'PostKind',
       _i2v49lle.PostLike => 'PostLike',
@@ -667,6 +728,16 @@ class Protocol extends _isc.SerializationManager {
         return 'FeedItemKind';
       case _ijk6vck4.LiveEventType():
         return 'LiveEventType';
+      case _irt10kca.ReaderNotification():
+        return 'ReaderNotification';
+      case _ipnxo26v.NotificationKind():
+        return 'NotificationKind';
+      case _i2bhchuw.OfficialPost():
+        return 'OfficialPost';
+      case _iwjxx537.OfficialPostKind():
+        return 'OfficialPostKind';
+      case _ibehfvf0.OfficialSeen():
+        return 'OfficialSeen';
       case _iwx4avst.Post():
         return 'Post';
       case _i8wd172o.PostKind():
@@ -815,6 +886,21 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'LiveEventType') {
       return deserialize<_ijk6vck4.LiveEventType>(data['data']);
+    }
+    if (dataClassName == 'ReaderNotification') {
+      return deserialize<_irt10kca.ReaderNotification>(data['data']);
+    }
+    if (dataClassName == 'NotificationKind') {
+      return deserialize<_ipnxo26v.NotificationKind>(data['data']);
+    }
+    if (dataClassName == 'OfficialPost') {
+      return deserialize<_i2bhchuw.OfficialPost>(data['data']);
+    }
+    if (dataClassName == 'OfficialPostKind') {
+      return deserialize<_iwjxx537.OfficialPostKind>(data['data']);
+    }
+    if (dataClassName == 'OfficialSeen') {
+      return deserialize<_ibehfvf0.OfficialSeen>(data['data']);
     }
     if (dataClassName == 'Post') {
       return deserialize<_iwx4avst.Post>(data['data']);
