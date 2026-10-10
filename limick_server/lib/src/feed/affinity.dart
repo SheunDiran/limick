@@ -92,6 +92,16 @@ DO UPDATE SET "score" = LEAST(GREATEST(book_affinity."score" + @weight, -10), 10
     );
     return {for (final r in rows) r.bookId: r.score};
   }
+
+  /// Decays affinity scores slightly so tastes can drift naturally over time.
+  static Future<void> decayAll(Session session, {double factor = 0.97}) async {
+    await session.db.unsafeExecute(
+      'UPDATE topic_affinity SET score = score * $factor',
+    );
+    await session.db.unsafeExecute(
+      'UPDATE book_affinity SET score = score * $factor',
+    );
+  }
 }
 
 /// Maps free-text fields of study to topics, for cold-start ranking.

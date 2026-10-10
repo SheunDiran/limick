@@ -118,7 +118,11 @@ class LibraryService {
     session.log('Downloading Gutenberg catalogue...');
     final compressed = await Gutenberg.download(catalogUrl, maxAttempts: 40);
     final csv = utf8.decode(gzip.decode(compressed), allowMalformed: true);
+    return importCatalogFromCsv(session, csv);
+  }
 
+  /// Parses CSV text and inserts eligible English books into the database.
+  static Future<int> importCatalogFromCsv(Session session, String csv) async {
     final existingIds = (await Book.db.find(
       session,
     )).map((b) => b.gutenbergId).toSet();

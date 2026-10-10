@@ -3,6 +3,7 @@ import 'package:serverpod/serverpod.dart';
 import '../generated/protocol.dart';
 import '../util/text.dart';
 import 'claude_client.dart';
+import 'post_validator.dart';
 
 /// Turns passages of ingested books into feed posts.
 ///
@@ -98,7 +99,12 @@ class PostGenerator {
           transaction: tx,
         );
       });
-      session.log('Generated ${posts.length} posts for @${book.handle}.');
+      final rawCount = ((response['posts'] as List?) ?? const []).length;
+      final rejected = rawCount - posts.length;
+      session.log(
+        'Generated ${posts.length} posts for @${book.handle}'
+        '${rejected > 0 ? ' ($rejected rejected by validation)' : ''}.',
+      );
       return posts.length;
     } catch (e) {
       // Outages, rate limits and auth errors are not the book's fault: don't
@@ -188,108 +194,7 @@ class PostGenerator {
     Map<String, dynamic> response,
     Book book,
     _Passage passage,
-  ) {
-    final raw = (response['posts'] as List?) ?? const [];
-    final posts = <Post>[];
-    final seenKinds = <PostKind>{};
-    for (final item in raw.whereType<Map<String, dynamic>>()) {
-      final kind = PostKind.values.asNameMap()[item['kind']];
-      if (kind == null || seenKinds.contains(kind)) continue;
-      final body = _clip(item['body'], 600);
-      if (body == null || body.length < 20) continue;
-
-      var start = passage.start;
-      var end = passage.end;
-      String? quote = _clip(item['quote'], 400);
-      if (quote != null) {
-        final found = findQuote(passage.text, quote);
-        if (found == null) {
-          // Never publish a quote that is not in the book.
-          if (kind == PostKind.quote || kind == PostKind.word) continue;
-          quote = null;
-        } else {
-          quote = passage.text
-              .substring(found.start, found.end)
-              .replaceAll('\n', ' ');
-          start = passage.start + found.start;
-          end = passage.start + found.end;
-        }
-      }
-      if (kind == PostKind.quote && quote == null) continue;
-
-      String? word, definition, partOfSpeech;
-      if (kind == PostKind.word) {
-        word = _clip(item['word'], 40);
-        definition = _clip(item['definition'], 240);
-        partOfSpeech = _clip(item['partOfSpeech'], 30);
-        if (word == null || definition == null) continue;
-        if (!containsWord(passage.text, word)) continue;
-      }
-
-      List<String>? parts;
-      if (kind == PostKind.thread) {
-        parts = ((item['parts'] as List?) ?? const [])
-            .map((p) => _clip(p, 400))
-            .whereType<String>()
-            .take(4)
-            .toList();
-        if (parts.length < 2) continue;
-      }
-
-      List<String>? options;
-      int? answer;
-      String? explanation;
-      if (kind == PostKind.quiz) {
-        options = ((item['options'] as List?) ?? const [])
-            .map((o) => _clip(o, 120))
-            .whereType<String>()
-            .take(4)
-            .toList();
-        answer = item['answerIndex'] is int ? item['answerIndex'] as int : -1;
-        explanation = _clip(item['explanation'], 400);
-        if (options.length < 3 || answer < 0 || answer >= options.length) {
-          continue;
-        }
-        if (options.toSet().length != options.length) continue;
-      }
-      if (kind == PostKind.debate) {
-        explanation = _clip(item['explanation'], 400);
-      }
-
-      final topic =
-          Topic.values.asNameMap()[item['topic']] ?? book.primaryTopic;
-      seenKinds.add(kind);
-      posts.add(
-        Post(
-          bookId: book.id!,
-          chapterId: passage.chapter.id!,
-          chapterPosition: passage.chapter.position,
-          kind: kind,
-          body: body,
-          quote: quote,
-          parts: parts,
-          word: word,
-          wordDefinition: definition,
-          wordPartOfSpeech: partOfSpeech,
-          quizOptions: options,
-          quizAnswerIndex: answer,
-          quizExplanation: explanation,
-          primaryTopic: book.topics.contains(topic) ? topic : book.primaryTopic,
-          historical: item['historical'] == true,
-          passageStart: start,
-          passageEnd: end,
-        ),
-      );
-    }
-    return posts;
-  }
-
-  static String? _clip(Object? value, int max) {
-    if (value is! String) return null;
-    final t = value.trim();
-    if (t.isEmpty) return null;
-    return t.length > max ? '${t.substring(0, max - 1)}…' : t;
-  }
+  ) => validateGeneratedPosts(response, book, passage);
 
   static String _userPrompt(Book book, _Passage passage, List<PostKind> kinds) {
     final topics = book.topics.map((t) => t.name).join(', ');
@@ -379,15 +284,18 @@ Every post: topic is the single best-fitting topic. historical is true when the 
   };
 }
 
-class _Passage {
-  /// The book with its reading cursor already advanced past this passage.
-  final Book book;
-  final Chapter chapter;
-  final String text;
-
-  /// Offsets of [text] inside the chapter.
-  final int start;
-  final int end;
-
-  _Passage(this.book, this.chapter, this.text, this.start, this.end);
+class _Passage extends PassageContext {
+  _Passage(
+    Book book,
+    Chapter chapter,
+    String text,
+    int start,
+    int end,
+  ) : super(
+          book: book,
+          chapter: chapter,
+          text: text,
+          start: start,
+          end: end,
+        );
 }

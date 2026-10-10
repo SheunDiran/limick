@@ -125,6 +125,19 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
+  Future<void> _sharePost() async {
+    HapticFeedback.lightImpact();
+    final uri = Uri.base;
+    final origin = (uri.scheme.isNotEmpty && uri.host.isNotEmpty)
+        ? '${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}'
+        : 'https://limick.app';
+    final shareUrl = '$origin/p/${post.id}';
+    await Clipboard.setData(ClipboardData(text: shareUrl));
+    if (mounted) {
+      showMessage(context, 'Post link copied to clipboard');
+    }
+  }
+
   void _openDetail() {
     if (widget.detail) return;
     Navigator.of(context).push(
@@ -424,16 +437,25 @@ class _PostCardState extends State<PostCard> {
           tooltip: item.saved ? 'Remove from saved' : 'Save',
           onTap: _toggleSave,
         ),
+        _Action(
+          icon: Icons.share_outlined,
+          tooltip: 'Share post',
+          onTap: _sharePost,
+        ),
         const Spacer(),
-        TextButton.icon(
-          style: TextButton.styleFrom(
-            foregroundColor: p.ink,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            minimumSize: const Size(0, 36),
+        Semantics(
+          button: true,
+          label: 'Read chapter in book',
+          child: TextButton.icon(
+            style: TextButton.styleFrom(
+              foregroundColor: p.ink,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: const Size(0, 36),
+            ),
+            onPressed: () => showOpenBookSheet(context, item),
+            icon: const Icon(Icons.menu_book_outlined, size: 18),
+            label: const Text('Read'),
           ),
-          onPressed: () => showOpenBookSheet(context, item),
-          icon: const Icon(Icons.menu_book_outlined, size: 18),
-          label: const Text('Read'),
         ),
       ],
     );
@@ -461,32 +483,36 @@ class _Action extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final c = color ?? p.faint;
-    return Tooltip(
-      message: tooltip,
-      child: InkResponse(
-        onTap: onTap,
-        radius: 22,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 8, 18, 8),
-          child: Row(
-            children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                transitionBuilder: (child, a) => animate
-                    ? ScaleTransition(
-                        scale: Tween(begin: 0.6, end: 1.0).animate(
-                          CurvedAnimation(parent: a, curve: Curves.elasticOut),
-                        ),
-                        child: child,
-                      )
-                    : FadeTransition(opacity: a, child: child),
-                child: Icon(icon, key: ValueKey(icon), size: 19, color: c),
-              ),
-              if (label != null) ...[
-                const SizedBox(width: 5),
-                Text(label!, style: TextStyle(fontSize: 13, color: c)),
+    return Semantics(
+      button: true,
+      label: label != null ? '$tooltip, $label' : tooltip,
+      child: Tooltip(
+        message: tooltip,
+        child: InkResponse(
+          onTap: onTap,
+          radius: 22,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8, 16, 8),
+            child: Row(
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  transitionBuilder: (child, a) => animate
+                      ? ScaleTransition(
+                          scale: Tween(begin: 0.6, end: 1.0).animate(
+                            CurvedAnimation(parent: a, curve: Curves.elasticOut),
+                          ),
+                          child: child,
+                        )
+                      : FadeTransition(opacity: a, child: child),
+                  child: Icon(icon, key: ValueKey(icon), size: 19, color: c),
+                ),
+                if (label != null) ...[
+                  const SizedBox(width: 5),
+                  Text(label!, style: TextStyle(fontSize: 13, color: c)),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
