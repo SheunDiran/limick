@@ -1,7 +1,6 @@
 import 'package:limick_server/src/books/library_service.dart';
 import 'package:limick_server/src/generated/protocol.dart';
-import 'package:serverpod/serverpod.dart';
-import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart';
+import 'package:serverpod_auth_idp_server/core.dart';
 import 'package:test/test.dart';
 
 import 'test_tools/serverpod_test_tools.dart';
@@ -31,7 +30,6 @@ void main() {
     late Book bookA;
     late Book bookB;
     late List<Post> postsA;
-    late List<Post> postsB;
 
     setUp(() async {
       final session = sessionBuilder.build();

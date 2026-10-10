@@ -16,8 +16,7 @@ class PostShareRoute extends Route {
     try {
       postId = request.pathParameters.get(_idParam);
     } catch (_) {
-      final raw = request.pathParameters.raw[#id] ??
-          request.pathParameters.raw['id'];
+      final raw = request.pathParameters.raw[#id];
       if (raw != null) postId = int.tryParse(raw.toString());
     }
 
