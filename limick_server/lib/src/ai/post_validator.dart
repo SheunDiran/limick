@@ -98,8 +98,7 @@ List<Post> validateGeneratedPosts(
       explanation = clipText(item['explanation'], 400);
     }
 
-    final topic =
-        Topic.values.asNameMap()[item['topic']] ?? book.primaryTopic;
+    final topic = Topic.values.asNameMap()[item['topic']] ?? book.primaryTopic;
     seenKinds.add(kind);
     posts.add(
       Post(

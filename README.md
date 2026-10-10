@@ -158,10 +158,11 @@ flutter test
 
 ---
 
-## AI Disclosure
+## AI Disclosure & Models Used
 
-- **Development**: Architectural scaffolding, initial implementation, and test suite developed with the assistance of Claude Code.
-- **Runtime Generation**: Posts are generated at runtime by Claude Haiku 4.5 (`claude-haiku-4-5`) via the Messages API using strict JSON-schema structured outputs.
+- **Development & Architecture**: System architecture design, full-stack scaffolding, complex refactoring, and integration testing built with **Claude Opus 5.5** and Claude Code.
+- **Context Synthesis & Analysis**: Rapid contextual analysis, passage synthesis, and prompt tuning supported by **Gemini 3.8 Flash**.
+- **Runtime Generation**: Posts are generated at runtime by **Claude Haiku 4.5** (`claude-haiku-4-5`) via the Messages API using strict JSON-schema structured outputs.
 - **Strict Grounding & Verification**: Every generated quote and vocabulary word is validated character-for-character against the original Gutenberg text before database insertion. Posts with hallucinations or unverified quotes are automatically discarded by the validation engine.
 
 ---

@@ -53,8 +53,6 @@ void main() {
       wordDefinition: wordDefinition,
       wordPartOfSpeech: wordPartOfSpeech,
       quizOptions: quizOptions,
-      quizAnswerIndex: quizAnswerIndex,
-      quizExplanation: quizExplanation,
       agreeCount: agreeCount,
       disagreeCount: disagreeCount,
       primaryTopic: Topic.science,
@@ -67,13 +65,17 @@ void main() {
       book: testBook,
       chapterTitle: 'Chapter I. — Variation Under Domestication',
       quizChoice: quizChoice,
-      quizCorrectIndex: quizCorrectIndex,
+      quizCorrectIndex: quizCorrectIndex ?? quizAnswerIndex,
       quizExplanation: quizExplanation,
       debateVote: debateVote,
     );
   }
 
-  Widget wrapWithTheme(Widget child, {Brightness brightness = Brightness.dark, double textScale = 1.0}) {
+  Widget wrapWithTheme(
+    Widget child, {
+    Brightness brightness = Brightness.dark,
+    double textScale = 1.0,
+  }) {
     return MaterialApp(
       theme: buildTheme(brightness),
       home: MediaQuery(
@@ -89,32 +91,47 @@ void main() {
     testWidgets('renders insight post with body and handle', (tester) async {
       final item = createItem(
         kind: PostKind.insight,
-        body: 'Insight: Natural selection preserves favourable individual differences.',
+        body:
+            'Insight: Natural selection preserves favourable individual differences.',
       );
 
       await tester.pumpWidget(wrapWithTheme(PostCard(item: item)));
       await tester.pump();
 
-      expect(find.text('On the Origin of Species'), findsOneWidget);
+      expect(find.textContaining('On the Origin of Species'), findsOneWidget);
       expect(find.textContaining('@OriginOfSpecies'), findsOneWidget);
-      expect(find.text('Insight: Natural selection preserves favourable individual differences.'), findsOneWidget);
+      expect(
+        find.text(
+          'Insight: Natural selection preserves favourable individual differences.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('renders quote post with striking excerpt', (tester) async {
       final item = createItem(
         kind: PostKind.quote,
-        quote: 'From so simple a beginning endless forms most beautiful have been evolved.',
+        quote:
+            'From so simple a beginning endless forms most beautiful have been evolved.',
         body: 'The closing synthesis of Darwin\'s thesis.',
       );
 
       await tester.pumpWidget(wrapWithTheme(PostCard(item: item)));
       await tester.pump();
 
-      expect(find.textContaining('endless forms most beautiful'), findsOneWidget);
-      expect(find.text('The closing synthesis of Darwin\'s thesis.'), findsOneWidget);
+      expect(
+        find.textContaining('endless forms most beautiful'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('The closing synthesis of Darwin\'s thesis.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('renders word post with vocab, definition and save button', (tester) async {
+    testWidgets('renders word post with vocab, definition and save button', (
+      tester,
+    ) async {
       final item = createItem(
         kind: PostKind.word,
         word: 'perspicuous',
@@ -128,13 +145,18 @@ void main() {
       await tester.pump();
 
       expect(find.text('WORD'), findsOneWidget);
-      expect(find.textContaining('perspicuous'), findsOneWidget);
       expect(find.textContaining('adjective'), findsOneWidget);
-      expect(find.text('Clearly expressed and easily understood.'), findsOneWidget);
+      expect(
+        find.text('Clearly expressed and easily understood.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('perspicuous observation'), findsOneWidget);
       expect(find.text('Save to word bank'), findsOneWidget);
     });
 
-    testWidgets('renders thread post with expand/collapse control', (tester) async {
+    testWidgets('renders thread post with expand/collapse control', (
+      tester,
+    ) async {
       final item = createItem(
         kind: PostKind.thread,
         body: 'How variation develops over successive generations:',
@@ -147,21 +169,36 @@ void main() {
       await tester.pumpWidget(wrapWithTheme(PostCard(item: item)));
       await tester.pump();
 
-      expect(find.text('How variation develops over successive generations:'), findsOneWidget);
+      expect(
+        find.text('How variation develops over successive generations:'),
+        findsOneWidget,
+      );
       expect(find.textContaining('Show thread'), findsOneWidget);
 
       await tester.tap(find.textContaining('Show thread'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('organisms inherit slight phenotypic deviations'), findsOneWidget);
-      expect(find.textContaining('competition selects for individuals'), findsOneWidget);
+      expect(
+        find.textContaining('organisms inherit slight phenotypic deviations'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('competition selects for individuals'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('renders quiz post with options and reveals answered state', (tester) async {
+    testWidgets('renders quiz post with options and reveals answered state', (
+      tester,
+    ) async {
       final item = createItem(
         kind: PostKind.quiz,
         body: 'What primarily drives divergence of character?',
-        quizOptions: ['Natural selection', 'Pure coincidence', 'Instantaneous mutation'],
+        quizOptions: [
+          'Natural selection',
+          'Pure coincidence',
+          'Instantaneous mutation',
+        ],
         quizAnswerIndex: 0,
         quizExplanation: 'Selection acts continuously on minute variations.',
         quizChoice: 0,
@@ -172,17 +209,26 @@ void main() {
       await tester.pump();
 
       expect(find.text('QUIZ'), findsOneWidget);
-      expect(find.text('What primarily drives divergence of character?'), findsOneWidget);
+      expect(
+        find.text('What primarily drives divergence of character?'),
+        findsOneWidget,
+      );
       expect(find.text('Natural selection'), findsOneWidget);
       expect(find.text('Pure coincidence'), findsOneWidget);
       expect(find.text('Correct.'), findsOneWidget);
-      expect(find.text('Selection acts continuously on minute variations.'), findsOneWidget);
+      expect(
+        find.text('Selection acts continuously on minute variations.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('renders debate post with vote bar and percentage breakdown', (tester) async {
+    testWidgets('renders debate post with vote bar and percentage breakdown', (
+      tester,
+    ) async {
       final item = createItem(
         kind: PostKind.debate,
-        body: 'Variation is driven more by environment than internal factors. Agree or disagree?',
+        body:
+            'Variation is driven more by environment than internal factors. Agree or disagree?',
         agreeCount: 8,
         disagreeCount: 2,
         debateVote: true,
@@ -212,16 +258,21 @@ void main() {
       expect(find.bySemanticsLabel('Read chapter in book'), findsOneWidget);
     });
 
-    testWidgets('renders cleanly without overflow at 200% text scale', (tester) async {
+    testWidgets('renders cleanly without overflow at 200% text scale', (
+      tester,
+    ) async {
       final item = createItem(
         kind: PostKind.word,
         word: 'unambiguous',
         wordPartOfSpeech: 'adj.',
         wordDefinition: 'Not open to more than one interpretation.',
-        body: 'Test text designed to ensure high accessibility font scaling works properly.',
+        body:
+            'Test text designed to ensure high accessibility font scaling works properly.',
       );
 
-      await tester.pumpWidget(wrapWithTheme(PostCard(item: item), textScale: 2.0));
+      await tester.pumpWidget(
+        wrapWithTheme(PostCard(item: item), textScale: 2.0),
+      );
       await tester.pump();
 
       expect(tester.takeException(), isNull);

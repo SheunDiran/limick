@@ -34,9 +34,9 @@ void main() {
   );
 
   Map<String, dynamic> wrap(List<Map<String, dynamic>> posts) => {
-        'bookBlurb': 'A foundational treatise on evolutionary biology.',
-        'posts': posts,
-      };
+    'bookBlurb': 'A foundational treatise on evolutionary biology.',
+    'posts': posts,
+  };
 
   group('Given post validation engine', () {
     test('when quote is invented then quote post is rejected', () {
@@ -44,7 +44,8 @@ void main() {
         {
           'kind': 'quote',
           'body': 'A bold declaration on survival.',
-          'quote': 'Only the strongest individuals are destined to live forever in nature.',
+          'quote':
+              'Only the strongest individuals are destined to live forever in nature.',
           'topic': 'science',
         },
       ]);
@@ -53,23 +54,32 @@ void main() {
       expect(validated, isEmpty);
     });
 
-    test('when quote exists in passage then quote post is accepted with recalculated offsets', () {
-      final response = wrap([
-        {
-          'kind': 'quote',
-          'body': 'Darwin on diversity.',
-          'quote': 'they generally differ more from each other',
-          'topic': 'science',
-        },
-      ]);
+    test(
+      'when quote exists in passage then quote post is accepted with recalculated offsets',
+      () {
+        final response = wrap([
+          {
+            'kind': 'quote',
+            'body': 'Darwin on diversity.',
+            'quote': 'they generally differ more from each other',
+            'topic': 'science',
+          },
+        ]);
 
-      final validated = validateGeneratedPosts(response, testBook, passage);
-      expect(validated, hasLength(1));
-      expect(validated.first.kind, PostKind.quote);
-      expect(validated.first.quote, 'they generally differ more from each other');
-      expect(validated.first.passageStart, greaterThan(0));
-      expect(validated.first.passageEnd, greaterThan(validated.first.passageStart));
-    });
+        final validated = validateGeneratedPosts(response, testBook, passage);
+        expect(validated, hasLength(1));
+        expect(validated.first.kind, PostKind.quote);
+        expect(
+          validated.first.quote,
+          'they generally differ more from each other',
+        );
+        expect(validated.first.passageStart, greaterThan(0));
+        expect(
+          validated.first.passageEnd,
+          greaterThan(validated.first.passageStart),
+        );
+      },
+    );
 
     test('when word does not appear in passage then word post is rejected', () {
       final response = wrap([
@@ -88,25 +98,31 @@ void main() {
       expect(validated, isEmpty);
     });
 
-    test('when word appears verbatim in passage then word post is accepted', () {
-      final response = wrap([
-        {
-          'kind': 'word',
-          'word': 'perspicuous',
-          'definition': 'Plain to the understanding; clear.',
-          'partOfSpeech': 'adjective',
-          'quote': 'This is a perspicuous fact of breeding.',
-          'body': 'Darwin uses perspicuous to indicate obvious clarity.',
-          'topic': 'science',
-        },
-      ]);
+    test(
+      'when word appears verbatim in passage then word post is accepted',
+      () {
+        final response = wrap([
+          {
+            'kind': 'word',
+            'word': 'perspicuous',
+            'definition': 'Plain to the understanding; clear.',
+            'partOfSpeech': 'adjective',
+            'quote': 'This is a perspicuous fact of breeding.',
+            'body': 'Darwin uses perspicuous to indicate obvious clarity.',
+            'topic': 'science',
+          },
+        ]);
 
-      final validated = validateGeneratedPosts(response, testBook, passage);
-      expect(validated, hasLength(1));
-      expect(validated.first.kind, PostKind.word);
-      expect(validated.first.word, 'perspicuous');
-      expect(validated.first.wordDefinition, 'Plain to the understanding; clear.');
-    });
+        final validated = validateGeneratedPosts(response, testBook, passage);
+        expect(validated, hasLength(1));
+        expect(validated.first.kind, PostKind.word);
+        expect(validated.first.word, 'perspicuous');
+        expect(
+          validated.first.wordDefinition,
+          'Plain to the understanding; clear.',
+        );
+      },
+    );
 
     test('when quiz has invalid answerIndex then quiz post is rejected', () {
       final negativeIndex = wrap([
@@ -131,32 +147,41 @@ void main() {
           'topic': 'science',
         },
       ]);
-      expect(validateGeneratedPosts(outOfBoundsIndex, testBook, passage), isEmpty);
+      expect(
+        validateGeneratedPosts(outOfBoundsIndex, testBook, passage),
+        isEmpty,
+      );
     });
 
-    test('when quiz has fewer than 3 options or duplicate options then it is rejected', () {
-      final twoOptions = wrap([
-        {
-          'kind': 'quiz',
-          'body': 'What do cultivated varieties do?',
-          'options': ['They differ more', 'They are identical'],
-          'answerIndex': 0,
-          'topic': 'science',
-        },
-      ]);
-      expect(validateGeneratedPosts(twoOptions, testBook, passage), isEmpty);
+    test(
+      'when quiz has fewer than 3 options or duplicate options then it is rejected',
+      () {
+        final twoOptions = wrap([
+          {
+            'kind': 'quiz',
+            'body': 'What do cultivated varieties do?',
+            'options': ['They differ more', 'They are identical'],
+            'answerIndex': 0,
+            'topic': 'science',
+          },
+        ]);
+        expect(validateGeneratedPosts(twoOptions, testBook, passage), isEmpty);
 
-      final duplicateOptions = wrap([
-        {
-          'kind': 'quiz',
-          'body': 'What do cultivated varieties do?',
-          'options': ['They differ more', 'They differ more', 'They vanish'],
-          'answerIndex': 0,
-          'topic': 'science',
-        },
-      ]);
-      expect(validateGeneratedPosts(duplicateOptions, testBook, passage), isEmpty);
-    });
+        final duplicateOptions = wrap([
+          {
+            'kind': 'quiz',
+            'body': 'What do cultivated varieties do?',
+            'options': ['They differ more', 'They differ more', 'They vanish'],
+            'answerIndex': 0,
+            'topic': 'science',
+          },
+        ]);
+        expect(
+          validateGeneratedPosts(duplicateOptions, testBook, passage),
+          isEmpty,
+        );
+      },
+    );
 
     test('when quiz is well-formed then it is accepted', () {
       final validQuiz = wrap([
@@ -165,7 +190,8 @@ void main() {
           'body': 'What do cultivated varieties do?',
           'options': ['They differ more', 'They are identical', 'They vanish'],
           'answerIndex': 0,
-          'explanation': 'Darwin observes greater variation under domestication.',
+          'explanation':
+              'Darwin observes greater variation under domestication.',
           'topic': 'science',
         },
       ]);
@@ -176,24 +202,27 @@ void main() {
       expect(validated.first.quizOptions, hasLength(3));
     });
 
-    test('when duplicate post kinds are returned then only the first is kept', () {
-      final response = wrap([
-        {
-          'kind': 'insight',
-          'body': 'First insight on variation under domestication.',
-          'topic': 'science',
-        },
-        {
-          'kind': 'insight',
-          'body': 'Second insight covering another biological concept.',
-          'topic': 'science',
-        },
-      ]);
+    test(
+      'when duplicate post kinds are returned then only the first is kept',
+      () {
+        final response = wrap([
+          {
+            'kind': 'insight',
+            'body': 'First insight on variation under domestication.',
+            'topic': 'science',
+          },
+          {
+            'kind': 'insight',
+            'body': 'Second insight covering another biological concept.',
+            'topic': 'science',
+          },
+        ]);
 
-      final validated = validateGeneratedPosts(response, testBook, passage);
-      expect(validated, hasLength(1));
-      expect(validated.first.body, contains('First insight'));
-    });
+        final validated = validateGeneratedPosts(response, testBook, passage);
+        expect(validated, hasLength(1));
+        expect(validated.first.body, contains('First insight'));
+      },
+    );
 
     test('when thread has fewer than 2 parts then it is rejected', () {
       final response = wrap([
@@ -213,8 +242,10 @@ void main() {
       final response = wrap([
         {
           'kind': 'debate',
-          'body': 'Domestic varieties diverge faster than wild species. Agree or disagree?',
-          'explanation': 'Proponents point to artificial selection; skeptics point to natural limits.',
+          'body':
+              'Domestic varieties diverge faster than wild species. Agree or disagree?',
+          'explanation':
+              'Proponents point to artificial selection; skeptics point to natural limits.',
           'topic': 'science',
         },
       ]);

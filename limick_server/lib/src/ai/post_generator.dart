@@ -292,10 +292,10 @@ class _Passage extends PassageContext {
     int start,
     int end,
   ) : super(
-          book: book,
-          chapter: chapter,
-          text: text,
-          start: start,
-          end: end,
-        );
+        book: book,
+        chapter: chapter,
+        text: text,
+        start: start,
+        end: end,
+      );
 }

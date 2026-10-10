@@ -500,7 +500,10 @@ class _Action extends StatelessWidget {
                   transitionBuilder: (child, a) => animate
                       ? ScaleTransition(
                           scale: Tween(begin: 0.6, end: 1.0).animate(
-                            CurvedAnimation(parent: a, curve: Curves.elasticOut),
+                            CurvedAnimation(
+                              parent: a,
+                              curve: Curves.elasticOut,
+                            ),
                           ),
                           child: child,
                         )

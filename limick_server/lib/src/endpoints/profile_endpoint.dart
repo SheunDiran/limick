@@ -373,11 +373,22 @@ class ProfileEndpoint extends Endpoint {
         // Rows that reference the profile are removed by cascading deletes.
         await Reader.db.deleteRow(session, profile, transaction: tx);
       }
-      await AuthServices.instance.authUsers.delete(
-        session,
-        authUserId: authUserId,
-        transaction: tx,
-      );
+      try {
+        await AuthServices.instance.authUsers.delete(
+          session,
+          authUserId: authUserId,
+          transaction: tx,
+        );
+      } on StateError {
+        final authUser = await AuthUser.db.findById(
+          session,
+          authUserId,
+          transaction: tx,
+        );
+        if (authUser != null) {
+          await AuthUser.db.deleteRow(session, authUser, transaction: tx);
+        }
+      }
     });
   }
 
